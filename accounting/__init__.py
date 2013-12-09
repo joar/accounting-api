@@ -96,22 +96,22 @@ class Ledger:
 
         return output
 
-    def send_command(self, p, command):
-        # TODO: Should be extended to handle the locking and return the output
-        _bytes = p.stdin.write(command + b'\n')
-        p.stdin.flush()
-
-        return _bytes
-
-    def bal(self):
+    def send_command(self, command):
         output = None
 
         with self.locked_process() as p:
-            _log.debug('aquired process lock')
-            self.send_command(p, b'bal --format "%A|%t\\\\n"')
-            _log.debug('sent command')
+            if isinstance(command, str):
+                command = command.encode('utf8')
+
+            p.stdin.write(command + b'\n')
+            p.stdin.flush()
 
             output = self.read_until_prompt(p)
+
+            return output
+
+    def bal(self):
+        output = self.send_command('bal --format "%A|%t\\\\n"')
 
         if output is None:
             raise RuntimeError('bal call returned no output')
@@ -129,13 +129,7 @@ class Ledger:
         return accounts
 
     def reg(self):
-        output = None
-
-        with self.locked_process() as p:
-            _log.debug('aquired process lock')
-            self.send_command(p, b'xml')
-
-            output = self.read_until_prompt(p)
+        output = self.send_command( 'xml')
 
         if output is None:
             raise RuntimeError('reg call returned no output')

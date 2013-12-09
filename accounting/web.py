@@ -20,7 +20,7 @@ class AccountingEncoder(json.JSONEncoder):
             )
         elif isinstance(o, Transaction):
             return dict(
-                date=o.date,
+                date=o.date.strftime('%Y-%m-%d'),
                 payee=o.payee,
                 postings=o.postings
             )
@@ -53,7 +53,7 @@ def register_report():
 
 
 def main():
-    app.run(debug=True)
+    app.run(host=app.config['HOST'], port=app.config['PORT'])
 
 if __name__ == '__main__':
     main()

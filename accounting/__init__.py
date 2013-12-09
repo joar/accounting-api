@@ -23,15 +23,20 @@ class Ledger:
     @contextmanager
     def locked_process(self):
         if self.locked:
-            _log.warning('Process is already locked')
-            for i in range(1, 5):
-                if i > 4:
+            raise RuntimeError('The process has already been locked,'
+                               ' something\'s out of order.')
+
+            # XXX: This code has no purpose in a single-threaded process
+            timout = 5  # Seconds
+
+            for i in range(1, timeout + 2):
+                if i > timeout:
                     raise RuntimeError('Ledger process is already locked')
 
                 if not self.locked:
                     break
                 else:
-                    _log.info('Waiting for one second... %d/%d', i, 5)
+                    _log.info('Waiting for one second... %d/%d', i, timeout)
                     time.sleep(1)
 
 

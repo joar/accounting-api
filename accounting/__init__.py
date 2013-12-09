@@ -1,3 +1,4 @@
+import sys
 import subprocess
 import logging
 import time
@@ -118,7 +119,10 @@ class Ledger:
         accounts = []
 
         for line in output.split(b'\n'):
-            name, balance =  line.decode('utf8').split('|')
+            try:
+                name, balance =  line.decode('utf8').split('|')
+            except ValueError:
+                continue
 
             accounts.append(Account(name=name, balance=balance))
 
@@ -195,12 +199,14 @@ class Account:
             self=self)
 
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    logging.basicConfig(level=logging.DEBUG)
     ledger = Ledger(ledger_file='non-profit-test-data.ledger')
     print(ledger.bal())
     print(ledger.reg())
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    main()
+    sys.exit(main())

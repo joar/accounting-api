@@ -40,7 +40,6 @@ class Ledger:
                     _log.info('Waiting for one second... %d/%d', i, timeout)
                     time.sleep(1)
 
-
         process = self.get_process()
 
         self.locked = True
@@ -111,25 +110,45 @@ class Ledger:
             return output
 
     def bal(self):
-        output = self.send_command('bal --format "%A|%t\\\\n"')
+        output = self.send_command('xml')
 
         if output is None:
             raise RuntimeError('bal call returned no output')
 
         accounts = []
 
-        for line in output.split(b'\n'):
-            try:
-                name, balance =  line.decode('utf8').split('|')
-            except ValueError:
-                continue
+        xml = ElementTree.fromstring(output.decode('utf8'))
 
-            accounts.append(Account(name=name, balance=balance))
+        accounts = self._recurse_accounts(xml.find('./accounts'))
+
+        return accounts
+
+    def _recurse_accounts(self, root):
+        accounts = []
+
+        for account in root.findall('./account'):
+            name = account.find('./fullname').text
+
+            amounts = []
+
+            account_amounts = account.findall('./account-total/balance/amount') or \
+                    account.findall('./account-amount/amount')
+
+            if account_amounts:
+                for amount in account_amounts:
+                    quantity = amount.find('./quantity').text
+                    symbol = amount.find('./commodity/symbol').text
+
+                    amounts.append(Amount(amount=quantity, symbol=symbol))
+
+            accounts.append(Account(name=name,
+                                    amounts=amounts,
+                                    accounts=self._recurse_accounts(account)))
 
         return accounts
 
     def reg(self):
-        output = self.send_command( 'xml')
+        output = self.send_command('xml')
 
         if output is None:
             raise RuntimeError('reg call returned no output')
@@ -152,7 +171,8 @@ class Ledger:
                     './post-amount/amount/commodity/symbol').text
 
                 postings.append(
-                    Posting(account=account, amount=amount, symbol=symbol))
+                    Posting(account=account,
+                            amount=Amount(amount=amount, symbol=symbol)))
 
             entries.append(
                 Transaction(date=date, payee=payee, postings=postings))
@@ -170,33 +190,44 @@ class Transaction:
         return ('<{self.__class__.__name__} {date}' +
                 ' {self.payee} {self.postings}').format(
                     self=self,
-                    date=self.date.isoformat())
+                    date=self.date.strftime('%Y-%m-%d'))
+
 
 class Posting:
-    def __init__(self, account=None, amount=None, symbol=None):
+    def __init__(self, account=None, amount=None):
         self.account = account
+        self.amount = amount
+
+    def __repr__(self):
+        return ('<{self.__class__.__name__} "{self.account}"' +
+                ' {self.amount}>').format(self=self)
+
+
+class Amount:
+    def __init__(self, amount=None, symbol=None):
         self.amount = amount
         self.symbol = symbol
 
     def __repr__(self):
-        return ('<{self.__class__.__name__} "{self.account}"' +
-                ' {self.symbol} {self.amount}>').format(self=self)
+        return ('<{self.__class__.__name__} {self.symbol}' +
+                ' {self.amount}>').format(self=self)
 
 
 class Account:
-    def __init__(self, name=None, balance=None):
+    def __init__(self, name=None, amounts=None, accounts=None):
         self.name = name
-        self.balance = balance
+        self.amounts = amounts
+        self.accounts = accounts
 
     def __repr__(self):
-        return '<{self.__class__.__name__}: "{self.name}" {self.balance} >'.format(
-            self=self)
+        return ('<{self.__class__.__name__} "{self.name}" {self.amounts}' +
+                ' {self.accounts}>').format(self=self)
 
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     ledger = Ledger(ledger_file='non-profit-test-data.ledger')
     print(ledger.bal())
     print(ledger.reg())

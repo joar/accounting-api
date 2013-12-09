@@ -27,7 +27,7 @@ class Ledger:
                                ' something\'s out of order.')
 
             # XXX: This code has no purpose in a single-threaded process
-            timout = 5  # Seconds
+            timeout = 5  # Seconds
 
             for i in range(1, timeout + 2):
                 if i > timeout:

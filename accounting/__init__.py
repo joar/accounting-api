@@ -43,12 +43,12 @@ class Ledger:
         process = self.get_process()
 
         self.locked = True
-        _log.debug('lock enabled')
+        _log.debug('Lock enabled')
 
         yield process
 
         self.locked = False
-        _log.debug('lock disabled')
+        _log.debug('Lock disabled')
 
     def assemble_arguments(self):
         return [
@@ -58,7 +58,7 @@ class Ledger:
         ]
 
     def init_process(self):
-        _log.debug('starting ledger process')
+        _log.debug('Starting ledger process...')
         self.ledger_process = subprocess.Popen(
             self.assemble_arguments(),
             stdout=subprocess.PIPE,
@@ -78,15 +78,12 @@ class Ledger:
         output = b''
 
         while True:
-            # _log.debug('reading data')
-
             line = p.stdout.read(1)  # XXX: This is a hack
-            # _log.debug('line: %s', line)
 
             output += line
 
             if b'\n] ' in output:
-                _log.debug('found prompt!')
+                _log.debug('Found prompt!')
                 break
 
         output = output[:-3]  # Cut away the prompt
@@ -106,6 +103,11 @@ class Ledger:
             p.stdin.flush()
 
             output = self.read_until_prompt(p)
+
+            self.ledger_process.send_signal(subprocess.signal.SIGTERM)
+            _log.debug('Waiting for ledger to shut down')
+            self.ledger_process.wait()
+            self.ledger_process = None
 
             return output
 
@@ -131,8 +133,12 @@ class Ledger:
 
             amounts = []
 
-            account_amounts = account.findall('./account-total/balance/amount') or \
-                    account.findall('./account-amount/amount')
+            # Try to find an account total value, then try to find the account
+            # balance
+            account_amounts = account.findall(
+                './account-total/balance/amount') or \
+                    account.findall('./account-amount/amount') or \
+                    account.findall('./account-total/amount')
 
             if account_amounts:
                 for amount in account_amounts:
@@ -140,6 +146,8 @@ class Ledger:
                     symbol = amount.find('./commodity/symbol').text
 
                     amounts.append(Amount(amount=quantity, symbol=symbol))
+            else:
+                _log.warning('Account %s does not have any amounts', name)
 
             accounts.append(Account(name=name,
                                     amounts=amounts,
@@ -225,9 +233,18 @@ class Account:
 
 
 def main(argv=None):
+    import argparse
     if argv is None:
         argv = sys.argv
-    logging.basicConfig(level=logging.INFO)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity',
+                        default='INFO',
+                        help=('Filter logging output. Possible values:' +
+                        ' CRITICAL, ERROR, WARNING, INFO, DEBUG'))
+
+    args = parser.parse_args(argv[1:])
+    logging.basicConfig(level=getattr(logging, args.verbosity, 'INFO'))
     ledger = Ledger(ledger_file='non-profit-test-data.ledger')
     print(ledger.bal())
     print(ledger.reg())

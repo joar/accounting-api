@@ -2,10 +2,12 @@ import sys
 import logging
 import argparse
 
-from flask import Flask, g, jsonify, json, request
+from flask import Flask, jsonify, request
 
-from accounting import Ledger, Account, Posting, Transaction, Amount
+from accounting import Ledger
 from accounting.transport import AccountingEncoder, AccountingDecoder
+from accounting.exceptions import AccountingException
+from accounting.decorators import jsonify_exceptions
 
 
 app = Flask('accounting')
@@ -30,6 +32,67 @@ def balance_report():
     report_data = ledger.bal()
 
     return jsonify(balance_report=report_data)
+
+
+@app.route('/transaction', methods=['POST'])
+@jsonify_exceptions
+def transaction():
+    '''
+    REST/JSON endpoint for transactions.
+
+    Current state:
+
+    Takes a POST request with a ``transactions`` JSON payload and writes it to
+    the ledger file.
+
+    Requires the ``transactions`` payload to be __type__-annotated:
+
+    .. code-block:: json
+
+        {
+          "transactions": [
+            {
+              "__type__": "Transaction",
+              "date": "2013-01-01",
+              "payee": "Kindly T. Donor",
+              "postings": [
+                {
+                  "__type__": "Posting",
+                  "account": "Income:Foo:Donation",
+                  "amount": {
+                    "__type__": "Amount",
+                    "amount": "-100",
+                    "symbol": "$"
+                  }
+                },
+                {
+                  "__type__": "Posting",
+                  "account": "Assets:Checking",
+                  "amount": {
+                    "__type__": "Amount",
+                    "amount": "100",
+                    "symbol": "$"
+                  }
+                }
+              ]
+            }
+        }
+
+    becomes::
+
+        2013-01-01 Kindly T. Donor
+          Income:Foo:Donation                                         $ -100
+          Assets:Checking                                              $ 100
+    '''
+    transactions = request.json.get('transactions')
+
+    if not transactions:
+        raise AccountingException('No transaction data provided')
+
+    for transaction in transactions:
+        ledger.add_transaction(transaction)
+
+    return jsonify(foo='bar')
 
 
 @app.route('/parse-json', methods=['POST'])

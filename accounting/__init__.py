@@ -111,6 +111,30 @@ class Ledger:
 
             return output
 
+    def add_transaction(self, transaction):
+        transaction_template = ('\n{date} {t.payee}\n'
+                                '{postings}')
+
+        posting_template = ('  {account} {p.amount.symbol}'
+                            ' {p.amount.amount}\n')
+
+        output  = b''
+
+        output += transaction_template.format(
+            date=transaction.date.strftime('%Y-%m-%d'),
+            t=transaction,
+            postings=''.join([posting_template.format(
+                p=p,
+                account=p.account + ' ' * (
+                    80 - (len(p.account) + len(p.amount.symbol) +
+                    len(p.amount.amount) + 1 + 2)
+                )) for p in transaction.postings])).encode('utf8')
+
+        with open(self.ledger_file, 'ab') as f:
+            f.write(output)
+
+        _log.debug('written to file: %s', output)
+
     def bal(self):
         output = self.send_command('xml')
 

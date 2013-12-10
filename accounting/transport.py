@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import json
 
 from accounting import Amount, Transaction, Posting, Account
@@ -30,6 +32,11 @@ class AccountingEncoder(json.JSONEncoder):
                 amount=o.amount,
                 symbol=o.symbol
             )
+        elif isinstance(o, Exception):
+            return dict(
+                __type__=o.__class__.__name__,
+                args=o.args
+            )
 
         return json.JSONEncoder.default(self, o)
 
@@ -45,5 +52,8 @@ class AccountingDecoder(json.JSONDecoder):
                                           Account]}
 
         _type = d.pop('__type__')
+
+        if _type == 'Transaction':
+            d['date'] = datetime.strptime(d['date'], '%Y-%m-%d')
 
         return types[_type](**d)

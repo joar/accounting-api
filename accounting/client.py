@@ -54,6 +54,23 @@ def _recurse_accounts(accounts, level=0):
         _recurse_accounts(account.accounts, level+1)
 
 
+def get_register():
+    response = requests.get(HOST + '/register')
+
+    register = response.json(cls=AccountingDecoder)
+
+    for transaction in register['register_report']:
+        print('{date} {t.payee:.<69}'.format(
+            date=transaction.date.strftime('%Y-%m-%d'),
+            t=transaction))
+
+        for posting in transaction.postings:
+            print(' ' + posting.account +
+                  ' ' * (80 - len(posting.account) - len(posting.amount.symbol) -
+                         len(str(posting.amount.amount)) - 1 - 1) +
+                  posting.amount.symbol + ' ' + str(posting.amount.amount))
+
+
 def main(argv=None, prog=None):
     global HOST
     if argv is None:
@@ -62,11 +79,12 @@ def main(argv=None, prog=None):
 
     parser = argparse.ArgumentParser(prog=prog)
     parser.add_argument('-p', '--paypal', type=Decimal)
+    parser.add_argument('-b', '--balance', action='store_true')
+    parser.add_argument('-r', '--register', action='store_true')
     parser.add_argument('-v', '--verbosity',
                         default='WARNING',
                         help=('Filter logging output. Possible values:' +
                         ' CRITICAL, ERROR, WARNING, INFO, DEBUG'))
-    parser.add_argument('-b', '--balance', action='store_true')
     parser.add_argument('--host', default='http://localhost:5000')
     args = parser.parse_args(argv)
 
@@ -78,6 +96,8 @@ def main(argv=None, prog=None):
         insert_paypal_transaction(args.paypal)
     elif args.balance:
         get_balance()
+    elif args.register:
+        get_register()
 
 if __name__ == '__main__':
     sys.exit(main())

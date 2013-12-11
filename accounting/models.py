@@ -1,11 +1,20 @@
+import uuid
 from decimal import Decimal
 
 
 class Transaction:
-    def __init__(self, date=None, payee=None, postings=None):
+    def __init__(self, date=None, payee=None, postings=None, metadata=None,
+                 _generate_id=False):
         self.date = date
         self.payee = payee
         self.postings = postings
+        self.metadata = metadata if metadata is not None else {}
+
+        if _generate_id:
+            self.generate_id()
+
+    def generate_id(self):
+        self.metadata.update({'Id': uuid.uuid4()})
 
     def __repr__(self):
         return ('<{self.__class__.__name__} {date}' +
@@ -15,9 +24,10 @@ class Transaction:
 
 
 class Posting:
-    def __init__(self, account=None, amount=None):
+    def __init__(self, account=None, amount=None, metadata=None):
         self.account = account
         self.amount = amount
+        self.metadata = metadata if metadata is not None else {}
 
     def __repr__(self):
         return ('<{self.__class__.__name__} "{self.account}"' +

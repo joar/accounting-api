@@ -1,26 +1,29 @@
-
 2010/01/01 Kindly T. Donor
+    ;Id: Ids can be anything
    Income:Foo:Donation   $-100.00
       ;Invoice: Projects/Foo/Invoices/Invoice20100101.pdf
    Assets:Checking       $100.00
 
-
 2011/03/15 Another J. Donor
+    ;Id: but mind you if they collide.
    Income:Foo:Donation   $-400.00
       ;Approval: Projects/Foo/earmark-record.txt
    Assets:Checking       $400.00
 
 2011/04/20 (1) Baz Hosting Services, LLC
+    ;Id: always make sure your IDs are unique
    Expenses:Foo:Hosting   $250.00
       ;Receipt: Projects/Foo/Expenses/hosting/AprilHostingReceipt.pdf
    Assets:Checking       $-250.00
 
 2011/05/10 Donation to General Fund
+    ;Id: if you have two transactions with the same ID, bad things may happen
    Income:Donation   $-50.00
       ;Invoice: Financial/Invoices/Invoice20110510.pdf
    Assets:Checking   $50.00
 
 2011/04/20 (2) Baz Hosting Services, LLC
+    ;Id: this is probably unique
    Expenses:Blah:Hosting   $250.00
       ;Receipt: Projects/Blah/Expenses/hosting/AprilHostingReceipt.pdf
       ;Invoice: Projects/Blah/Expenses/hosting/april-invoice.pdf
@@ -28,29 +31,16 @@
       ;Statement: Financial/BankStuff/bank-statement.pdf
 
 2011-04-25 A transaction with ISO date
+    ;Id: I'm a snowflake!
    Income:Karma              KARMA-10
    Assets:Karma Account      KARMA 10
 
-2013-01-01 Kindly T. Donor
-  Income:Foo:Donation                                                      $ -100
-  Assets:Checking                                                           $ 100
-
-2013-03-15 Another J. Donor
-  Income:Foo:Donation                                                      $ -400
-  Assets:Checking                                                           $ 400
+2013-12-11 PayPal donation
+   ;Id: bd7f6781-fdc6-4111-b3ad-bee2247e426d
+  Income:Donations:PayPal                                                $ -20.17
+  Assets:Checking                                                         $ 20.17
 
 2013-12-11 PayPal donation
-  Income:Donations:PayPal                                                  $ -100
-  Assets:Checking                                                           $ 100
-
-2013-12-11 PayPal donation
-  Income:Donations:PayPal                                                 $ -1000
-  Assets:Checking                                                          $ 1000
-
-2013-12-11 PayPal donation
-  Income:Donations:PayPal                                                 $ -0.25
-  Assets:Checking                                                          $ 0.25
-
-2013-12-11 PayPal donation
-  Income:Donations:PayPal                                                $ -0.252
-  Assets:Checking                                                         $ 0.252
+   ;Id: 31048b9d-a5b6-41d7-951a-e7128e7c53c0
+  Income:Donations:PayPal                                                $ -20.18
+  Assets:Checking                                                         $ 20.18

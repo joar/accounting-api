@@ -18,13 +18,15 @@ class AccountingEncoder(json.JSONEncoder):
                 __type__=o.__class__.__name__,
                 date=o.date.strftime('%Y-%m-%d'),
                 payee=o.payee,
-                postings=o.postings
+                postings=o.postings,
+                metadata=o.metadata
             )
         elif isinstance(o, Posting):
             return dict(
                 __type__=o.__class__.__name__,
                 account=o.account,
                 amount=o.amount,
+                metadata=o.metadata
             )
         elif isinstance(o, Amount):
             return dict(

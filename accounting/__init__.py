@@ -119,23 +119,37 @@ class Ledger:
         writing a ledger transaction based on the Transaction instance in
         ``transaction``.
         '''
+        if not transaction.metadata.get('Id'):
+            transaction.generate_id()
+
         transaction_template = ('\n{date} {t.payee}\n'
+                                '{tags}'
                                 '{postings}')
 
+        metadata_template = '   ;{0}: {1}\n'
+
+        # TODO: Generate metadata for postings
         posting_template = ('  {account} {p.amount.symbol}'
                             ' {p.amount.amount}\n')
 
         output  = b''
 
+        # XXX: Even I hardly understands what this does, however I indent it it
+        # stays unreadable.
         output += transaction_template.format(
             date=transaction.date.strftime('%Y-%m-%d'),
             t=transaction,
+            tags=''.join([
+                metadata_template.format(k, v) \
+                    for k, v in transaction.metadata.items()]),
             postings=''.join([posting_template.format(
                 p=p,
                 account=p.account + ' ' * (
                     80 - (len(p.account) + len(p.amount.symbol) +
                     len(str(p.amount.amount)) + 1 + 2)
-                )) for p in transaction.postings])).encode('utf8')
+                )) for p in transaction.postings
+            ])
+        ).encode('utf8')
 
         with open(self.ledger_file, 'ab') as f:
             f.write(output)
@@ -209,12 +223,41 @@ class Ledger:
                 symbol = posting.find(
                     './post-amount/amount/commodity/symbol').text
 
+                # Get the posting metadata
+                metadata = {}
+
+                values = posting.findall('./metadata/value')
+                if values:
+                    for value in values:
+                        key = value.get('key')
+                        value = value.find('./string').text
+
+                        _log.debug('metadata: %s: %s', key, value)
+
+                        metadata.update({key: value})
+
                 postings.append(
                     Posting(account=account,
+                            metadata=metadata,
                             amount=Amount(amount=amount, symbol=symbol)))
 
+            # Get the transaction metadata
+            metadata = {}
+
+            values = transaction.findall('./metadata/value')
+            if values:
+                for value in values:
+                    key = value.get('key')
+                    value = value.find('./string').text
+
+                    _log.debug('metadata: %s: %s', key, value)
+
+                    metadata.update({key: value})
+
+            # Add a Transaction instance to the list
             entries.append(
-                Transaction(date=date, payee=payee, postings=postings))
+                Transaction(date=date, payee=payee, postings=postings,
+                            metadata=metadata))
 
         return entries
 

@@ -7,6 +7,8 @@ from datetime import datetime
 from xml.etree import ElementTree
 from contextlib import contextmanager
 
+from accounting.models import Account, Transaction, Posting, Amount
+
 _log = logging.getLogger(__name__)
 
 class Ledger:
@@ -112,6 +114,11 @@ class Ledger:
             return output
 
     def add_transaction(self, transaction):
+        '''
+        Writes a transaction to the ledger file by opening it in 'ab' mode and
+        writing a ledger transaction based on the Transaction instance in
+        ``transaction``.
+        '''
         transaction_template = ('\n{date} {t.payee}\n'
                                 '{postings}')
 
@@ -127,7 +134,7 @@ class Ledger:
                 p=p,
                 account=p.account + ' ' * (
                     80 - (len(p.account) + len(p.amount.symbol) +
-                    len(p.amount.amount) + 1 + 2)
+                    len(str(p.amount.amount)) + 1 + 2)
                 )) for p in transaction.postings])).encode('utf8')
 
         with open(self.ledger_file, 'ab') as f:
@@ -210,50 +217,6 @@ class Ledger:
                 Transaction(date=date, payee=payee, postings=postings))
 
         return entries
-
-
-class Transaction:
-    def __init__(self, date=None, payee=None, postings=None):
-        self.date = date
-        self.payee = payee
-        self.postings = postings
-
-    def __repr__(self):
-        return ('<{self.__class__.__name__} {date}' +
-                ' {self.payee} {self.postings}').format(
-                    self=self,
-                    date=self.date.strftime('%Y-%m-%d'))
-
-
-class Posting:
-    def __init__(self, account=None, amount=None):
-        self.account = account
-        self.amount = amount
-
-    def __repr__(self):
-        return ('<{self.__class__.__name__} "{self.account}"' +
-                ' {self.amount}>').format(self=self)
-
-
-class Amount:
-    def __init__(self, amount=None, symbol=None):
-        self.amount = amount
-        self.symbol = symbol
-
-    def __repr__(self):
-        return ('<{self.__class__.__name__} {self.symbol}' +
-                ' {self.amount}>').format(self=self)
-
-
-class Account:
-    def __init__(self, name=None, amounts=None, accounts=None):
-        self.name = name
-        self.amounts = amounts
-        self.accounts = accounts
-
-    def __repr__(self):
-        return ('<{self.__class__.__name__} "{self.name}" {self.amounts}' +
-                ' {self.accounts}>').format(self=self)
 
 
 def main(argv=None):

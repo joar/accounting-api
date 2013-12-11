@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask import json
 
-from accounting import Amount, Transaction, Posting, Account
+from accounting.models import Amount, Transaction, Posting, Account
 
 class AccountingEncoder(json.JSONEncoder):
     def default(self, o):
@@ -29,7 +29,7 @@ class AccountingEncoder(json.JSONEncoder):
         elif isinstance(o, Amount):
             return dict(
                 __type__=o.__class__.__name__,
-                amount=o.amount,
+                amount=str(o.amount),
                 symbol=o.symbol
             )
         elif isinstance(o, Exception):

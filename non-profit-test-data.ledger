@@ -30,3 +30,27 @@
 2011-04-25 A transaction with ISO date
    Income:Karma              KARMA-10
    Assets:Karma Account      KARMA 10
+
+2013-01-01 Kindly T. Donor
+  Income:Foo:Donation                                                      $ -100
+  Assets:Checking                                                           $ 100
+
+2013-03-15 Another J. Donor
+  Income:Foo:Donation                                                      $ -400
+  Assets:Checking                                                           $ 400
+
+2013-12-11 PayPal donation
+  Income:Donations:PayPal                                                  $ -100
+  Assets:Checking                                                           $ 100
+
+2013-12-11 PayPal donation
+  Income:Donations:PayPal                                                 $ -1000
+  Assets:Checking                                                          $ 1000
+
+2013-12-11 PayPal donation
+  Income:Donations:PayPal                                                 $ -0.25
+  Assets:Checking                                                          $ 0.25
+
+2013-12-11 PayPal donation
+  Income:Donations:PayPal                                                $ -0.252
+  Assets:Checking                                                         $ 0.252

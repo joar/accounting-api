@@ -33,10 +33,13 @@ def balance_report():
 
     return jsonify(balance_report=report_data)
 
+@app.route('/transaction', methods=['GET'])
+def transaction_get():
+    return jsonify(transactions=ledger.reg())
 
 @app.route('/transaction', methods=['POST'])
 @jsonify_exceptions
-def transaction():
+def transaction_post():
     '''
     REST/JSON endpoint for transactions.
 

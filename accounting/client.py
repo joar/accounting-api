@@ -11,64 +11,79 @@ import requests
 from accounting.models import Transaction, Posting, Amount
 from accounting.transport import AccountingDecoder, AccountingEncoder
 
-# TODO: Client should be a class
-
-HOST = None
+_log = logging.getLogger(__name__)
 
 
-def insert_paypal_transaction(amount):
-    t = Transaction(
-        date=datetime.today(),
-        payee='PayPal donation',
-        postings=[
-            Posting(account='Income:Donations:PayPal',
-                    amount=Amount(symbol='$', amount=-amount)),
-            Posting(account='Assets:Checking',
-                    amount=Amount(symbol='$', amount=amount))
-        ]
-    )
+class Client:
+    def __init__(self, host=None, json_encoder=None,
+                 json_decoder=None):
+        self.host = host or 'http://localhost:5000'
+        self.json_encoder = json_encoder or AccountingEncoder
+        self.json_decoder = json_decoder or AccountingDecoder
 
-    response = requests.post(HOST + '/transaction',
-                             headers={'Content-Type': 'application/json'},
-                             data=json.dumps({'transactions': [t]},
-                                             cls=AccountingEncoder))
+    def get_balance(self):
+        balance = self.get('/balance')
+        return balance['balance_report']
 
-    print(response.json(cls=AccountingDecoder))
+    def get(self, path):
+        response = requests.get(self.host + path)
+
+        return self._decode_response(response)
+
+    def _decode_response(self, response):
+        response_data = response.json(cls=self.json_decoder)
+
+        _log.debug('response_data: %s', response_data)
+
+        return response_data
+
+    def post(self, path, payload, **kw):
+        kw.update({'headers': {'Content-Type': 'application/json'}})
+        kw.update({'data': json.dumps(payload, cls=self.json_encoder)})
+
+        return self._decode_response(requests.post(self.host + path, **kw))
+
+    def simple_transaction(self, from_acc, to_acc, amount):
+        t = Transaction(
+            date=datetime.today(),
+            payee='PayPal donation',
+            postings=[
+                Posting(account=from_acc,
+                        amount=Amount(symbol='$', amount=-amount)),
+                Posting(account=to_acc,
+                        amount=Amount(symbol='$', amount=amount))
+            ]
+        )
+
+        return self.post('/transaction', {'transactions': [t]})
+
+    def get_register(self):
+        register = self.get('/register')
+
+        return register['register_report']
 
 
-def get_balance():
-    response = requests.get(HOST + '/balance')
-
-    balance = response.json(cls=AccountingDecoder)
-
-    _recurse_accounts(balance['balance_report'])
-
-
-def _recurse_accounts(accounts, level=0):
-    for account in accounts:
-        print(' ' * level + ' + {account.name}'.format(account=account) +
-              ' ' + '-' * (80 - len(str(account.name)) - level))
-        for amount in account.amounts:
-            print(' ' * level + '   {amount.symbol} {amount.amount}'.format(
-                amount=amount))
-        _recurse_accounts(account.accounts, level+1)
-
-
-def get_register():
-    response = requests.get(HOST + '/register')
-
-    register = response.json(cls=AccountingDecoder)
-
-    for transaction in register['register_report']:
+def print_transactions(transactions):
+    for transaction in transactions:
         print('{date} {t.payee:.<69}'.format(
             date=transaction.date.strftime('%Y-%m-%d'),
             t=transaction))
 
         for posting in transaction.postings:
             print(' ' + posting.account +
-                  ' ' * (80 - len(posting.account) - len(posting.amount.symbol) -
-                         len(str(posting.amount.amount)) - 1 - 1) +
-                  posting.amount.symbol + ' ' + str(posting.amount.amount))
+                ' ' * (80 - len(posting.account) - len(posting.amount.symbol) -
+                        len(str(posting.amount.amount)) - 1 - 1) +
+                posting.amount.symbol + ' ' + str(posting.amount.amount))
+
+
+def print_balance_accounts(accounts, level=0):
+    for account in accounts:
+        print(' ' * level + ' + {account.name}'.format(account=account) +
+              ' ' + '-' * (80 - len(str(account.name)) - level))
+        for amount in account.amounts:
+            print(' ' * level + '   {amount.symbol} {amount.amount}'.format(
+                amount=amount))
+        print_balance_accounts(account.accounts, level+1)
 
 
 def main(argv=None, prog=None):
@@ -78,26 +93,39 @@ def main(argv=None, prog=None):
         argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(prog=prog)
-    parser.add_argument('-p', '--paypal', type=Decimal)
-    parser.add_argument('-b', '--balance', action='store_true')
-    parser.add_argument('-r', '--register', action='store_true')
+    actions = parser.add_subparsers(title='Actions', dest='action')
+
+    insert = actions.add_parser('insert',
+                                aliases=['in'])
+    insert.add_argument('from_account')
+    insert.add_argument('to_account')
+    insert.add_argument('amount', type=Decimal)
+
+    balance = actions.add_parser('balance', aliases=['bal'])
+
+    register = actions.add_parser('register', aliases=['reg'])
+
     parser.add_argument('-v', '--verbosity',
                         default='WARNING',
                         help=('Filter logging output. Possible values:' +
                         ' CRITICAL, ERROR, WARNING, INFO, DEBUG'))
     parser.add_argument('--host', default='http://localhost:5000')
-    args = parser.parse_args(argv)
 
-    HOST = args.host
+    args = parser.parse_args(argv)
 
     logging.basicConfig(level=getattr(logging, args.verbosity))
 
-    if args.paypal:
-        insert_paypal_transaction(args.paypal)
-    elif args.balance:
-        get_balance()
-    elif args.register:
-        get_register()
+    client = Client(args.host)
+
+    if args.action in ['insert', 'in']:
+        print(client.simple_transaction(args.from_account, args.to_account,
+                                        args.amount))
+    elif args.action in ['balance', 'bal']:
+        print_balance_accounts(client.get_balance())
+    elif args.action in ['register', 'reg']:
+        print_transactions(client.get_register())
+    else:
+        parser.print_help()
 
 if __name__ == '__main__':
     sys.exit(main())

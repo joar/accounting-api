@@ -20,4 +20,4 @@
     LEDGER_FILE=../path/to/your.ledger ./bin/serve
 
     # Get a balance report via the web service
-    ./bin/client --balance
+    ./bin/client balance

@@ -1,3 +1,7 @@
+'''
+This module contains the high-level webservice logic such as the Flask setup
+and the Flask endpoints.
+'''
 import sys
 import logging
 import argparse
@@ -13,7 +17,16 @@ from accounting.decorators import jsonify_exceptions
 app = Flask('accounting')
 app.config.from_pyfile('config.py')
 
-ledger = Ledger(ledger_file=app.config['LEDGER_FILE'])
+ledger = None
+
+@app.before_request
+def init_ledger():
+    '''
+    :py:meth:`flask.Flask.before_request`-decorated method that initializes an
+    :py:class:`accounting.Ledger` object.
+    '''
+    global ledger
+    ledger = Ledger(ledger_file=app.config['LEDGER_FILE'])
 
 
 # These will convert output from our internal classes to JSON and back
@@ -23,18 +36,24 @@ app.json_decoder = AccountingDecoder
 
 @app.route('/')
 def index():
+    ''' Hello World! '''
     return 'Hello World!'
 
 
 @app.route('/balance')
 def balance_report():
-    ''' Returns the balance report from ledger '''
+    '''
+    Returns the JSON-serialized result of :meth:`accounting.Ledger.bal`
+    '''
     report_data = ledger.bal()
 
     return jsonify(balance_report=report_data)
 
 @app.route('/transaction', methods=['GET'])
 def transaction_get():
+    '''
+    Returns the JSON-serialized output of :meth:`accounting.Ledger.reg`
+    '''
     return jsonify(transactions=ledger.reg())
 
 @app.route('/transaction', methods=['POST'])
@@ -106,40 +125,42 @@ def parse_json():
 
     Example:
 
+    .. code-block:: bash
+
         wget http://127.0.0.1:5000/balance -O balance.json
         curl -X POST -H 'Content-Type: application/json' -d @balance.json \
             http://127.0.0.1/parse-json
         # Logging output (linebreaks added for clarity)
-        DEBUG:accounting:json data: {'balance_report':
-            [<Account "None" [
-                <Amount $ 0>, <Amount KARMA 0>]
-                [<Account "Assets" [
-                    <Amount $ 50>, <Amount KARMA 10>]
-                    [<Account "Assets:Checking" [
-                        <Amount $ 50>] []>,
-                     <Account "Assets:Karma Account" [
-                        <Amount KARMA 10>] []>]>,
-                 <Account "Expenses" [
-                    <Amount $ 500>]
-                    [<Account "Expenses:Blah" [
-                        <Amount $ 250>]
-                        [<Account "Expenses:Blah:Hosting" [
-                            <Amount $ 250>] []>]>,
-                     <Account "Expenses:Foo" [
-                        <Amount $ 250>] [
-                        <Account "Expenses:Foo:Hosting" [
-                            <Amount $ 250>] []>]>]>,
-                 <Account "Income" [
-                    <Amount $ -550>,
-                    <Amount KARMA -10>]
-                    [<Account "Income:Donation" [
-                        <Amount $ -50>] []>,
-                     <Account "Income:Foo" [
-                        <Amount $ -500>]
-                        [<Account "Income:Foo:Donation" [
-                            <Amount $ -500>] []>]>,
-                     <Account "Income:Karma" [
-                     <Amount KARMA -10>] []>]>]>]}
+        # DEBUG:accounting:json data: {'balance_report':
+        #    [<Account "None" [
+        #        <Amount $ 0>, <Amount KARMA 0>]
+        #        [<Account "Assets" [
+        #            <Amount $ 50>, <Amount KARMA 10>]
+        #            [<Account "Assets:Checking" [
+        #                <Amount $ 50>] []>,
+        #             <Account "Assets:Karma Account" [
+        #                <Amount KARMA 10>] []>]>,
+        #         <Account "Expenses" [
+        #            <Amount $ 500>]
+        #            [<Account "Expenses:Blah" [
+        #                <Amount $ 250>]
+        #                [<Account "Expenses:Blah:Hosting" [
+        #                    <Amount $ 250>] []>]>,
+        #             <Account "Expenses:Foo" [
+        #                <Amount $ 250>] [
+        #                <Account "Expenses:Foo:Hosting" [
+        #                    <Amount $ 250>] []>]>]>,
+        #         <Account "Income" [
+        #            <Amount $ -550>,
+        #            <Amount KARMA -10>]
+        #            [<Account "Income:Donation" [
+        #                <Amount $ -50>] []>,
+        #             <Account "Income:Foo" [
+        #                <Amount $ -500>]
+        #                [<Account "Income:Foo:Donation" [
+        #                    <Amount $ -500>] []>]>,
+        #             <Account "Income:Karma" [
+        #             <Amount KARMA -10>] []>]>]>]}
     '''
     app.logger.debug('json data: %s', request.json)
     return jsonify(foo='bar')
@@ -147,7 +168,9 @@ def parse_json():
 
 @app.route('/register')
 def register_report():
-    ''' Returns the register report from ledger '''
+    '''
+    Returns the JSON-serialized output of :py:meth:`accounting.Ledger.reg`
+    '''
     report_data = ledger.reg()
 
     return jsonify(register_report=report_data)

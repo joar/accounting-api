@@ -25,6 +25,22 @@ class Ledger:
 
     @contextmanager
     def locked_process(self):
+        r'''
+        Context manager that checks that the ledger process is not already
+        locked, then "locks" the process and yields the process handle and
+        unlocks the process when execution is returned.
+
+        Since this decorated as a :func:`contextlib.contextmanager` the
+        recommended use is with the ``with``-statement.
+
+        .. code-block:: python
+
+            with self.locked_process() as p:
+                p.stdin.write(b'bal\n')
+
+                output = self.read_until_prompt(p)
+
+        '''
         if self.locked:
             raise RuntimeError('The process has already been locked,'
                                ' something\'s out of order.')
@@ -53,6 +69,10 @@ class Ledger:
         _log.debug('Lock disabled')
 
     def assemble_arguments(self):
+        '''
+        Returns a list of arguments suitable for :class:`subprocess.Popen` based on
+        :attr:`self.ledger_bin` and :attr:`self.ledger_file`.
+        '''
         return [
             self.ledger_bin,
             '-f',
@@ -60,6 +80,12 @@ class Ledger:
         ]
 
     def init_process(self):
+        '''
+        Creates a new (presumably) ledger subprocess based on the args from
+        :meth:`Ledger.assemble_arguments()` and then runs
+        :meth:`Ledger.read_until_prompt()` once (which should return the banner
+        text) and discards the output.
+        '''
         _log.debug('Starting ledger process...')
         self.ledger_process = subprocess.Popen(
             self.assemble_arguments(),
@@ -74,13 +100,23 @@ class Ledger:
         return self.ledger_process
 
     def get_process(self):
+        '''
+        Returns :attr:`self.ledger_process` if it evaluates to ``True``. If
+        :attr:`self.ledger_process` is not set the result of
+        :meth:`self.init_process() <Ledger.init_process>` is returned.
+        '''
         return self.ledger_process or self.init_process()
 
-    def read_until_prompt(self, p):
+    def read_until_prompt(self, process):
+        r'''
+        Reads from the subprocess instance :data:`process` until it finds a
+        combination of ``\n]\x20`` (the prompt), then returns the output
+        without the prompt.
+        '''
         output = b''
 
         while True:
-            line = p.stdout.read(1)  # XXX: This is a hack
+            line = process.stdout.read(1)  # XXX: This is a hack
 
             output += line
 
@@ -116,8 +152,8 @@ class Ledger:
     def add_transaction(self, transaction):
         '''
         Writes a transaction to the ledger file by opening it in 'ab' mode and
-        writing a ledger transaction based on the Transaction instance in
-        ``transaction``.
+        writing a ledger transaction based on the
+        :class:`~accounting.models.Transaction` instance in :data:`transaction`.
         '''
         if not transaction.metadata.get('Id'):
             transaction.generate_id()

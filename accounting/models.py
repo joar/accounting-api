@@ -3,8 +3,9 @@ from decimal import Decimal
 
 
 class Transaction:
-    def __init__(self, date=None, payee=None, postings=None, metadata=None,
-                 _generate_id=False):
+    def __init__(self, id=None, date=None, payee=None, postings=None,
+                 metadata=None, _generate_id=False):
+        self.id = id
         self.date = date
         self.payee = payee
         self.postings = postings
@@ -14,7 +15,7 @@ class Transaction:
             self.generate_id()
 
     def generate_id(self):
-        self.metadata.update({'Id': uuid.uuid4()})
+        self.id = uuid.uuid4()
 
     def __repr__(self):
         return ('<{self.__class__.__name__} {date}' +

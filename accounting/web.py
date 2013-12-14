@@ -7,8 +7,12 @@ import logging
 import argparse
 
 from flask import Flask, jsonify, request
+from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.script import Manager
+from flask.ext.migrate import Migrate, MigrateCommand
 
-from accounting import Ledger
+from accounting.storage.ledgercli import Ledger
+from accounting.storage.sql import SQLStorage
 from accounting.transport import AccountingEncoder, AccountingDecoder
 from accounting.exceptions import AccountingException
 from accounting.decorators import jsonify_exceptions
@@ -17,7 +21,15 @@ from accounting.decorators import jsonify_exceptions
 app = Flask('accounting')
 app.config.from_pyfile('config.py')
 
-ledger = None
+storage = SQLStorage(app)
+
+# TODO: Move migration stuff into SQLStorage
+db = storage.db
+migrate = Migrate(app, db)
+
+manager = Manager(app)
+manager.add_command('db', MigrateCommand)
+
 
 @app.before_request
 def init_ledger():
@@ -26,7 +38,7 @@ def init_ledger():
     :py:class:`accounting.Ledger` object.
     '''
     global ledger
-    ledger = Ledger(ledger_file=app.config['LEDGER_FILE'])
+    #ledger = Ledger(ledger_file=app.config['LEDGER_FILE'])
 
 
 # These will convert output from our internal classes to JSON and back
@@ -40,21 +52,13 @@ def index():
     return 'Hello World!'
 
 
-@app.route('/balance')
-def balance_report():
-    '''
-    Returns the JSON-serialized result of :meth:`accounting.Ledger.bal`
-    '''
-    report_data = ledger.bal()
-
-    return jsonify(balance_report=report_data)
-
 @app.route('/transaction', methods=['GET'])
 def transaction_get():
     '''
     Returns the JSON-serialized output of :meth:`accounting.Ledger.reg`
     '''
-    return jsonify(transactions=ledger.reg())
+    return jsonify(transactions=storage.get_transactions())
+
 
 @app.route('/transaction', methods=['POST'])
 @jsonify_exceptions
@@ -112,7 +116,7 @@ def transaction_post():
         raise AccountingException('No transaction data provided')
 
     for transaction in transactions:
-        ledger.add_transaction(transaction)
+        storage.add_transaction(transaction)
 
     return jsonify(foo='bar')
 
@@ -166,16 +170,6 @@ def parse_json():
     return jsonify(foo='bar')
 
 
-@app.route('/register')
-def register_report():
-    '''
-    Returns the JSON-serialized output of :py:meth:`accounting.Ledger.reg`
-    '''
-    report_data = ledger.reg()
-
-    return jsonify(register_report=report_data)
-
-
 def main(argv=None):
     prog = __name__
     if argv is None:
@@ -186,7 +180,7 @@ def main(argv=None):
     parser.add_argument('-v', '--verbosity',
                         default='INFO',
                         help=('Filter logging output. Possible values:' +
-                        ' CRITICAL, ERROR, WARNING, INFO, DEBUG'))
+                              ' CRITICAL, ERROR, WARNING, INFO, DEBUG'))
 
     args = parser.parse_args(argv)
 

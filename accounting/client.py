@@ -58,9 +58,9 @@ class Client:
         return self.post('/transaction', {'transactions': [t]})
 
     def get_register(self):
-        register = self.get('/register')
+        register = self.get('/transaction')
 
-        return register['register_report']
+        return register['transactions']
 
 
 def print_transactions(transactions):
@@ -71,18 +71,21 @@ def print_transactions(transactions):
 
         for posting in transaction.postings:
             print(' ' + posting.account +
-                ' ' * (80 - len(posting.account) - len(posting.amount.symbol) -
-                        len(str(posting.amount.amount)) - 1 - 1) +
-                posting.amount.symbol + ' ' + str(posting.amount.amount))
+                  ' ' * (80 - len(posting.account) -
+                         len(posting.amount.symbol) -
+                         len(str(posting.amount.amount)) - 1 - 1) +
+                  posting.amount.symbol + ' ' + str(posting.amount.amount))
 
 
 def print_balance_accounts(accounts, level=0):
     for account in accounts:
         print(' ' * level + ' + {account.name}'.format(account=account) +
               ' ' + '-' * (80 - len(str(account.name)) - level))
+
         for amount in account.amounts:
             print(' ' * level + '   {amount.symbol} {amount.amount}'.format(
                 amount=amount))
+
         print_balance_accounts(account.accounts, level+1)
 
 
@@ -101,14 +104,14 @@ def main(argv=None, prog=None):
     insert.add_argument('to_account')
     insert.add_argument('amount', type=Decimal)
 
-    balance = actions.add_parser('balance', aliases=['bal'])
+    actions.add_parser('balance', aliases=['bal'])
 
-    register = actions.add_parser('register', aliases=['reg'])
+    actions.add_parser('register', aliases=['reg'])
 
     parser.add_argument('-v', '--verbosity',
                         default='WARNING',
                         help=('Filter logging output. Possible values:' +
-                        ' CRITICAL, ERROR, WARNING, INFO, DEBUG'))
+                              ' CRITICAL, ERROR, WARNING, INFO, DEBUG'))
     parser.add_argument('--host', default='http://localhost:5000')
 
     args = parser.parse_args(argv)

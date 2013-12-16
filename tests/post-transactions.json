@@ -1,0 +1,54 @@
+{
+  "transactions": [
+    {
+      "__type__": "Transaction",
+      "date": "2013-01-01",
+      "payee": "Kindly T. Donor",
+      "postings": [
+        {
+          "__type__": "Posting",
+          "account": "Income:Foo:Donation",
+          "amount": {
+            "__type__": "Amount",
+            "amount": "-100",
+            "symbol": "$"
+          }
+        },
+        {
+          "__type__": "Posting",
+          "account": "Assets:Checking",
+          "amount": {
+            "__type__": "Amount",
+            "amount": "100",
+            "symbol": "$"
+          }
+        }
+      ]
+    },
+    {
+      "__type__": "Transaction",
+      "date": "2013-03-15",
+      "payee": "Another J. Donor",
+      "postings": [
+        {
+          "__type__": "Posting",
+          "account": "Income:Foo:Donation",
+          "amount": {
+            "__type__": "Amount",
+            "amount": "-400",
+            "symbol": "$"
+          }
+        },
+        {
+          "__type__": "Posting",
+          "account": "Assets:Checking",
+          "amount": {
+            "__type__": "Amount",
+            "amount": "400",
+            "symbol": "$"
+          }
+        }
+      ]
+    }
+  ]
+}

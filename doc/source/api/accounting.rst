@@ -1,67 +1,77 @@
-accounting Package
+accounting package
 ==================
 
-:mod:`accounting` Package
--------------------------
+Subpackages
+-----------
 
-.. automodule:: accounting
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
 
-:mod:`client` Module
---------------------
+    accounting.storage
+
+Submodules
+----------
+
+accounting.client module
+------------------------
 
 .. automodule:: accounting.client
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`config` Module
---------------------
+accounting.config module
+------------------------
 
 .. automodule:: accounting.config
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`decorators` Module
-------------------------
+accounting.decorators module
+----------------------------
 
 .. automodule:: accounting.decorators
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`exceptions` Module
-------------------------
+accounting.exceptions module
+----------------------------
 
 .. automodule:: accounting.exceptions
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`models` Module
---------------------
+accounting.models module
+------------------------
 
 .. automodule:: accounting.models
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`transport` Module
------------------------
+accounting.transport module
+---------------------------
 
 .. automodule:: accounting.transport
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`web` Module
------------------
+accounting.web module
+---------------------
 
 .. automodule:: accounting.web
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: accounting
+    :members:
+    :undoc-members:
+    :show-inheritance:

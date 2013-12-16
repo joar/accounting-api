@@ -21,14 +21,15 @@ from accounting.decorators import jsonify_exceptions
 app = Flask('accounting')
 app.config.from_pyfile('config.py')
 
-storage = SQLStorage(app)
+storage = Ledger(app=app)
 
-# TODO: Move migration stuff into SQLStorage
-db = storage.db
-migrate = Migrate(app, db)
+if isinstance(storage, SQLStorage):
+    # TODO: Move migration stuff into SQLStorage
+    db = storage.db
+    migrate = Migrate(app, db)
 
-manager = Manager(app)
-manager.add_command('db', MigrateCommand)
+    manager = Manager(app)
+    manager.add_command('db', MigrateCommand)
 
 
 @app.before_request
@@ -58,6 +59,24 @@ def transaction_get():
     Returns the JSON-serialized output of :meth:`accounting.Ledger.reg`
     '''
     return jsonify(transactions=storage.get_transactions())
+
+@app.route('/transaction/<string:transaction_id>', methods=['POST'])
+@jsonify_exceptions
+def transaction_update(transaction_id=None):
+    if transaction_id is None:
+        raise AccountingException('The transaction ID cannot be None.')
+
+    transaction = request.json['transaction']
+
+    if transaction.id is not None and not transaction.id == transaction_id:
+        raise AccountingException('The transaction data has an ID attribute and'
+                                  ' it is not the same ID as in the path')
+    elif transaction.id is None:
+        transaction.id = transaction_id
+
+    storage.update_transaction(transaction)
+
+    return jsonify(status='OK')
 
 
 @app.route('/transaction', methods=['POST'])
@@ -118,56 +137,7 @@ def transaction_post():
     for transaction in transactions:
         storage.add_transaction(transaction)
 
-    return jsonify(foo='bar')
-
-
-@app.route('/parse-json', methods=['POST'])
-def parse_json():
-    r'''
-    Parses a __type__-annotated JSON payload and debug-logs the decoded version
-    of it.
-
-    Example:
-
-    .. code-block:: bash
-
-        wget http://127.0.0.1:5000/balance -O balance.json
-        curl -X POST -H 'Content-Type: application/json' -d @balance.json \
-            http://127.0.0.1/parse-json
-        # Logging output (linebreaks added for clarity)
-        # DEBUG:accounting:json data: {'balance_report':
-        #    [<Account "None" [
-        #        <Amount $ 0>, <Amount KARMA 0>]
-        #        [<Account "Assets" [
-        #            <Amount $ 50>, <Amount KARMA 10>]
-        #            [<Account "Assets:Checking" [
-        #                <Amount $ 50>] []>,
-        #             <Account "Assets:Karma Account" [
-        #                <Amount KARMA 10>] []>]>,
-        #         <Account "Expenses" [
-        #            <Amount $ 500>]
-        #            [<Account "Expenses:Blah" [
-        #                <Amount $ 250>]
-        #                [<Account "Expenses:Blah:Hosting" [
-        #                    <Amount $ 250>] []>]>,
-        #             <Account "Expenses:Foo" [
-        #                <Amount $ 250>] [
-        #                <Account "Expenses:Foo:Hosting" [
-        #                    <Amount $ 250>] []>]>]>,
-        #         <Account "Income" [
-        #            <Amount $ -550>,
-        #            <Amount KARMA -10>]
-        #            [<Account "Income:Donation" [
-        #                <Amount $ -50>] []>,
-        #             <Account "Income:Foo" [
-        #                <Amount $ -500>]
-        #                [<Account "Income:Foo:Donation" [
-        #                    <Amount $ -500>] []>]>,
-        #             <Account "Income:Karma" [
-        #             <Amount KARMA -10>] []>]>]>]}
-    '''
-    app.logger.debug('json data: %s', request.json)
-    return jsonify(foo='bar')
+    return jsonify(status='OK')
 
 
 def main(argv=None):

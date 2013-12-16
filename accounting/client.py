@@ -2,6 +2,7 @@ import sys
 import argparse
 import json
 import logging
+import locale
 
 from datetime import datetime
 from decimal import Decimal
@@ -10,6 +11,8 @@ import requests
 
 from accounting.models import Transaction, Posting, Amount
 from accounting.transport import AccountingDecoder, AccountingEncoder
+
+locale.setlocale(locale.LC_ALL, '')
 
 _log = logging.getLogger(__name__)
 
@@ -43,15 +46,20 @@ class Client:
 
         return self._decode_response(requests.post(self.host + path, **kw))
 
-    def simple_transaction(self, from_acc, to_acc, amount):
+    def simple_transaction(self, from_acc, to_acc, amount, symbol=None,
+                           payee=None):
+        if symbol is None:
+            # Get the currency from the environment locale
+            symbol = locale.localeconv()['int_curr_symbol'].strip()
+
         t = Transaction(
             date=datetime.today(),
-            payee='PayPal donation',
+            payee=payee,
             postings=[
                 Posting(account=from_acc,
-                        amount=Amount(symbol='$', amount=-amount)),
+                        amount=Amount(symbol=symbol, amount=-amount)),
                 Posting(account=to_acc,
-                        amount=Amount(symbol='$', amount=amount))
+                        amount=Amount(symbol=symbol, amount=amount))
             ]
         )
 
@@ -86,7 +94,7 @@ def print_balance_accounts(accounts, level=0):
             print(' ' * level + '   {amount.symbol} {amount.amount}'.format(
                 amount=amount))
 
-        print_balance_accounts(account.accounts, level+1)
+        print_balance_accounts(account.accounts, level + 1)
 
 
 def main(argv=None, prog=None):
@@ -100,9 +108,16 @@ def main(argv=None, prog=None):
 
     insert = actions.add_parser('insert',
                                 aliases=['in'])
+    insert.add_argument('payee',
+                        help='The payee line of the transaction')
     insert.add_argument('from_account')
     insert.add_argument('to_account')
-    insert.add_argument('amount', type=Decimal)
+    insert.add_argument('amount', type=Decimal,
+                        help='The amount deducted from from_account and added'
+                             ' to to_account')
+    insert.add_argument('-s', '--symbol',
+                        help='The symbol for the amount, e.g. $ or USD for'
+                             ' USD. Defaults to your locale\'s setting.')
 
     actions.add_parser('balance', aliases=['bal'])
 
@@ -122,7 +137,8 @@ def main(argv=None, prog=None):
 
     if args.action in ['insert', 'in']:
         print(client.simple_transaction(args.from_account, args.to_account,
-                                        args.amount))
+                                        args.amount, payee=args.payee,
+                                        symbol=args.symbol))
     elif args.action in ['balance', 'bal']:
         print_balance_accounts(client.get_balance())
     elif args.action in ['register', 'reg']:

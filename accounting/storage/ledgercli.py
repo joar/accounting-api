@@ -14,7 +14,10 @@ _log = logging.getLogger(__name__)
 
 
 class Ledger(Storage):
-    def __init__(self, ledger_file=None, ledger_bin=None):
+    def __init__(self, app=None, ledger_file=None, ledger_bin=None):
+        if app:
+            ledger_file = app.config['LEDGER_FILE']
+
         if ledger_file is None:
             raise ValueError('ledger_file cannot be None')
 
@@ -158,11 +161,14 @@ class Ledger(Storage):
         :class:`~accounting.models.Transaction` instance in
         :data:`transaction`.
         '''
-        if not transaction.metadata.get('Id'):
+        if transaction.id is None:
+            _log.debug('No ID found. Generating an ID.')
             transaction.generate_id()
 
+        transaction.metadata.update({'Id': transaction.id})
+
         transaction_template = ('\n{date} {t.payee}\n'
-                                '{tags}'
+                                '{metadata}'
                                 '{postings}')
 
         metadata_template = '   ;{0}: {1}\n'
@@ -178,7 +184,7 @@ class Ledger(Storage):
         output += transaction_template.format(
             date=transaction.date.strftime('%Y-%m-%d'),
             t=transaction,
-            tags=''.join([
+            metadata=''.join([
                 metadata_template.format(k, v)
                 for k, v in transaction.metadata.items()]),
             postings=''.join([posting_template.format(
@@ -238,6 +244,9 @@ class Ledger(Storage):
                                     accounts=self._recurse_accounts(account)))
 
         return accounts
+
+    def get_transactions(self):
+        return self.reg()
 
     def reg(self):
         output = self.send_command('xml')
@@ -300,6 +309,9 @@ class Ledger(Storage):
                             metadata=metadata))
 
         return entries
+
+    def update_transaction(self, transaction):
+        _log.debug('DUMMY: Updated transaction: %s', transaction)
 
 
 def main(argv=None):

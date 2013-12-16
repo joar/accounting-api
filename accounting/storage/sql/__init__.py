@@ -3,6 +3,7 @@ import json
 
 from flask.ext.sqlalchemy import SQLAlchemy
 
+from accounting.exceptions import AccountingException
 from accounting.storage import Storage
 from accounting.models import Transaction, Posting, Amount
 
@@ -11,8 +12,12 @@ db = None
 
 
 class SQLStorage(Storage):
-    def __init__(self, app):
+    def __init__(self, app=None):
         global db
+
+        if not app:
+            raise Exception('Missing app keyword argument')
+
         self.app = app
         db = self.db = SQLAlchemy(app)
 
@@ -47,12 +52,19 @@ class SQLStorage(Storage):
 
         return transactions
 
+    def update_transaction(self, transaction):
+        if transaction.id is None:
+            raise AccountingException('The transaction id must be set for'
+                                      ' update_transaction calls')
+
+        _log.debug('DUMMY: Update transaction: %s', transaction)
+
     def add_transaction(self, transaction):
         if transaction.id is None:
             transaction.generate_id()
 
         _t = self.Transaction()
-        _t.uuid = str(transaction.id)
+        _t.uuid = transaction.id
         _t.date = transaction.date
         _t.payee = transaction.payee
         _t.meta = json.dumps(transaction.metadata)
@@ -61,7 +73,7 @@ class SQLStorage(Storage):
 
         for posting in transaction.postings:
             _p = self.Posting()
-            _p.transaction_uuid = str(transaction.id)
+            _p.transaction_uuid = transaction.id
             _p.account = posting.account
             _p.meta = json.dumps(posting.metadata)
             _p.amount = self.Amount(symbol=posting.amount.symbol,

@@ -8,18 +8,17 @@ from accounting.storage import Storage
 from accounting.models import Transaction, Posting, Amount
 
 _log = logging.getLogger(__name__)
-db = None
+db = SQLAlchemy()
 
 
 class SQLStorage(Storage):
     def __init__(self, app=None):
-        global db
 
         if not app:
             raise Exception('Missing app keyword argument')
 
         self.app = app
-        db = self.db = SQLAlchemy(app)
+        db.init_app(app)
 
         from .models import Transaction as SQLTransaction, \
             Posting as SQLPosting, Amount as SQLAmount
@@ -69,7 +68,7 @@ class SQLStorage(Storage):
         _t.payee = transaction.payee
         _t.meta = json.dumps(transaction.metadata)
 
-        self.db.session.add(_t)
+        db.session.add(_t)
 
         for posting in transaction.postings:
             _p = self.Posting()
@@ -79,6 +78,6 @@ class SQLStorage(Storage):
             _p.amount = self.Amount(symbol=posting.amount.symbol,
                                     amount=posting.amount.amount)
 
-            self.db.session.add(_p)
+            db.session.add(_p)
 
-        self.db.session.commit()
+        db.session.commit()

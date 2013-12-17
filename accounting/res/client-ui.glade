@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <!-- interface-requires gtk+ 3.0 -->
+  <object class="GtkListStore" id="posting_store">
+    <columns>
+      <!-- column-name Account -->
+      <column type="gchararray"/>
+      <!-- column-name Amount -->
+      <column type="gchararray"/>
+      <!-- column-name Symbol -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkAction" id="show_about">
+    <property name="label" translatable="yes">About</property>
+    <signal name="activate" handler="on_show_about_activate" swapped="no"/>
+  </object>
+  <object class="GtkWindow" id="accounting_window">
+    <property name="can_focus">False</property>
+    <accel-groups>
+      <group name="transaction_accel_group"/>
+    </accel-groups>
+    <child>
+      <object class="GtkBox" id="main">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkMenuBar" id="menu">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkMenuItem" id="menu_file">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">_File</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="on_menuitem1_activate" swapped="no"/>
+                <child type="submenu">
+                  <object class="GtkMenu" id="get_transactions">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menu_refresh">
+                        <property name="related_action">refresh</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem" id="separatormenuitem1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menu_quit">
+                        <property name="label">gtk-quit</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="menu_help">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">_Help</property>
+                <property name="use_underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu3">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menu_about">
+                        <property name="related_action">show_about</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkPaned" id="paned">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkTreeView" id="transaction_view">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="opacity">0.98999999999999999</property>
+                <property name="hexpand">True</property>
+                <property name="model">transaction_store</property>
+                <property name="search_column">2</property>
+                <signal name="cursor-changed" handler="on_transaction_view_cursor_changed" swapped="no"/>
+                <child>
+                  <object class="GtkTreeViewColumn" id="transaction_col_id">
+                    <property name="visible">False</property>
+                    <property name="resizable">True</property>
+                    <property name="sizing">autosize</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="id_renderer"/>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="transaction_col_date">
+                    <property name="resizable">True</property>
+                    <property name="sizing">autosize</property>
+                    <property name="title" translatable="yes">Date</property>
+                    <property name="sort_indicator">True</property>
+                    <property name="sort_column_id">1</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="date_renderer"/>
+                      <attributes>
+                        <attribute name="text">1</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="transaction_col_payee">
+                    <property name="resizable">True</property>
+                    <property name="title" translatable="yes">Payee</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="payee_renderer"/>
+                      <attributes>
+                        <attribute name="text">2</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="resize">True</property>
+                <property name="shrink">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="transaction_detail">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkLabel" id="transaction_header">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="ypad">18</property>
+                    <attributes>
+                      <attribute name="scale" value="1.2"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkTreeView" id="posting_view">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="hexpand">True</property>
+                    <property name="model">posting_store</property>
+                    <property name="headers_clickable">False</property>
+                    <property name="search_column">0</property>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="posting_col_account">
+                        <property name="title" translatable="yes">Account</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="account_renderer"/>
+                          <attributes>
+                            <attribute name="text">0</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="posting_col_amount">
+                        <property name="title" translatable="yes">Amount</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="amount_renderer"/>
+                          <attributes>
+                            <attribute name="text">1</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="posting_col_symbol">
+                        <property name="title" translatable="yes">Symbol</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="symbol_renderer"/>
+                          <attributes>
+                            <attribute name="text">2</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="resize">True</property>
+                <property name="shrink">True</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="status_bar">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <object class="GtkSpinner" id="activity_indicator">
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack_type">end</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="status_description">
+                <property name="can_focus">False</property>
+                <property name="ypad">1</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack_type">end</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkAboutDialog" id="about_dialog">
+    <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="window_position">center-always</property>
+    <property name="destroy_with_parent">True</property>
+    <property name="type_hint">dialog</property>
+    <property name="transient_for">accounting_window</property>
+    <property name="program_name">Accounting Client</property>
+    <property name="version">dev</property>
+    <property name="website">http://gitorious.org/conservancy/accounting-api</property>
+    <property name="website_label" translatable="yes">Source code</property>
+    <property name="license_type">lgpl-2-1</property>
+    <signal name="close" handler="on_about_dialog_close" swapped="no"/>
+    <signal name="response" handler="on_about_dialog_response" swapped="no"/>
+  </object>
+  <object class="GtkAccelGroup" id="transaction_accel_group"/>
+  <object class="GtkActionGroup" id="transaction_actions">
+    <property name="accel_group">transaction_accel_group</property>
+    <child>
+      <object class="GtkAction" id="refresh">
+        <property name="label" translatable="yes">Test</property>
+        <signal name="activate" handler="on_transaction_refresh_activate" swapped="no"/>
+      </object>
+      <accelerator key="r" modifiers="GDK_CONTROL_MASK"/>
+    </child>
+  </object>
+  <object class="GtkListStore" id="transaction_store">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name Date -->
+      <column type="gchararray"/>
+      <!-- column-name Payee -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+</interface>

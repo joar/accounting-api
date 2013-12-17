@@ -1,7 +1,9 @@
 import sys
 import logging
 import threading
+import pkg_resources
 
+from functools import wraps
 from datetime import datetime
 
 from gi.repository import Gtk
@@ -13,86 +15,74 @@ from accounting.client import Client
 _log = logging.getLogger(__name__)
 
 
-class Accounting(Gtk.Window):
+def indicate_activity(func_or_str):
+    description = None
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kw):
+            self.status_description.set_text(description)
+            self.activity_indicator.show()
+            self.activity_indicator.start()
+
+            return func(self, *args, **kw)
+
+        return wrapper
+
+    if callable(func_or_str):
+        description = 'Working'
+        return decorator(func_or_str)
+    else:
+        description = func_or_str
+        return decorator
+
+
+def indicate_activity_done(func):
+    @wraps(func)
+    def wrapper(self, *args, **kw):
+        self.status_description.set_text('')
+        self.activity_indicator.stop()
+        self.activity_indicator.hide()
+
+        return func(self, *args, **kw)
+
+    return wrapper
+
+
+class AccountingApplication:
     def __init__(self):
-        Gtk.Window.__init__(self, title='Accounting Client')
+        #Gtk.Window.__init__(self, title='Accounting Client')
 
         self.client = Client()
 
-        self.set_border_width(0)
+        self.load_ui(pkg_resources.resource_filename(
+            'accounting', 'res/client-ui.glade'))
 
-        self.set_default_geometry(640, 360)
+        self.about_dialog.set_transient_for(self.accounting_window)
 
-        # Controls
+        self.accounting_window.connect('delete-event', Gtk.main_quit)
+        self.accounting_window.set_border_width(0)
+        self.accounting_window.set_default_geometry(640, 360)
 
-        self.btn_load_transactions = Gtk.Button(label='Load transactions')
-        self.btn_load_transactions.connect('clicked', self.on_button_clicked)
+        self.accounting_window.show_all()
+        self.transaction_detail.hide()
 
-        self.spinner = Gtk.Spinner()
+    def load_ui(self, path):
+        _log.debug('Loading UI...')
+        builder = Gtk.Builder()
+        builder.add_from_file(path)
+        builder.connect_signals(self)
 
-        renderer = Gtk.CellRendererText()
+        for element in builder.get_objects():
+            try:
+                setattr(self, Gtk.Buildable.get_name(element), element)
+                _log.debug('Loaded %s', Gtk.Buildable.get_name(element))
+            except TypeError as exc:
+                _log.error('%s could not be loaded: %s', element, exc)
 
-        # Transaction stuff
+        _log.debug('UI loaded')
 
-        self.transaction_data = None
-        self.transaction_store = Gtk.ListStore(str, str, str)
-        self.transaction_view = Gtk.TreeView(self.transaction_store)
-
-        self.id_column = Gtk.TreeViewColumn('ID', renderer, text=0)
-        self.date_column = Gtk.TreeViewColumn('Date', renderer, text=1)
-        self.payee_column = Gtk.TreeViewColumn('Payee', renderer, text=2)
-
-        self.transaction_view.append_column(self.date_column)
-        self.transaction_view.append_column(self.payee_column)
-
-        self.transaction_view.connect('cursor-changed',
-                                      self.on_transaction_selected)
-
-        # Postings
-
-        self.posting_store = Gtk.ListStore(str, str, str)
-        self.posting_view = Gtk.TreeView(self.posting_store)
-
-        self.account_column = Gtk.TreeViewColumn('Account', renderer, text=0)
-        self.amount_column = Gtk.TreeViewColumn('Amount', renderer, text=1)
-        self.symbol_column = Gtk.TreeViewColumn('Symbol', renderer, text=2)
-
-        self.posting_view.append_column(self.account_column)
-        self.posting_view.append_column(self.amount_column)
-        self.posting_view.append_column(self.symbol_column)
-
-        # The transaction detail view
-
-        self.lbl_payee = Gtk.Label()
-
-        # Layout setting
-        self.menu = Gtk.MenuBar.new()
-
-        self.ctrl_box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
-        self.ctrl_box.pack_start(self.btn_load_transactions, False, False, 0)
-        self.ctrl_box.pack_start(self.spinner, False, False, 5)
-
-        self.detail_view = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
-        self.detail_view.pack_start(self.lbl_payee, False, True, 0)
-        self.detail_view.pack_start(self.posting_view, True, True, 0)
-
-        self.vertical = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
-        self.vertical.pack_start(self.ctrl_box, False, True, 0)
-        self.vertical.pack_start(self.transaction_view, True, True, 0)
-
-        self.paned = Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
-        self.add(self.paned)
-
-        self.paned.add1(self.vertical)
-        self.paned.add2(self.detail_view)
-
-        # Show
-
-        self.show_all()
-        self.spinner.hide()
-        self.detail_view.hide()
-
-    def on_transaction_selected(self, widget):
+    def on_transaction_view_cursor_changed(self, widget):
         selection = self.transaction_view.get_selection()
         selection.set_mode(Gtk.SelectionMode.SINGLE)
         xact_store, xact_iter = selection.get_selected()
@@ -102,7 +92,7 @@ class Accounting(Gtk.Window):
 
         for transaction in self.transaction_data:
             if transaction.id == xact_id:
-                self.lbl_payee.set_text(transaction.payee)
+                self.transaction_header.set_text(transaction.payee)
 
                 self.posting_store.clear()
 
@@ -113,22 +103,30 @@ class Accounting(Gtk.Window):
                         posting.amount.symbol
                     ])
 
-                self.detail_view.show()
+                self.transaction_detail.show()
                 break
 
-    def on_button_clicked(self, widget):
+    def on_show_about_activate(self, widget):
+        _log.debug('Showing About')
+        self.about_dialog.show_all()
+
+    def on_about_dialog_response(self, widget, response_type):
+        _log.debug('Closing About')
+        if response_type == Gtk.ResponseType.CANCEL:
+            self.about_dialog.hide()
+        else:
+            _log.error('Unexpected response_type: %d', response_type)
+
+    @indicate_activity('Refreshing Transactions')
+    def on_transaction_refresh_activate(self, widget):
         def load_transactions():
             transactions = self.client.get_register()
             GLib.idle_add(self.on_transactions_loaded, transactions)
 
-        self.spinner.show()
-        self.spinner.start()
-
         threading.Thread(target=load_transactions).start()
 
+    @indicate_activity_done
     def on_transactions_loaded(self, transactions):
-        self.spinner.stop()
-        self.spinner.hide()
         _log.debug('transactions: %s', transactions)
 
         self.transaction_data = transactions
@@ -147,8 +145,7 @@ def main(argv=None):
 
     GObject.threads_init()
 
-    accounting_win = Accounting()
-    accounting_win.connect('delete-event', Gtk.main_quit)
+    accounting = AccountingApplication()
 
     Gtk.main()
 

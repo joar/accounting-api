@@ -1,20 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
-  <object class="GtkListStore" id="posting_store">
-    <columns>
-      <!-- column-name Account -->
-      <column type="gchararray"/>
-      <!-- column-name Amount -->
-      <column type="gchararray"/>
-      <!-- column-name Symbol -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkAction" id="show_about">
-    <property name="label" translatable="yes">About</property>
-    <signal name="activate" handler="on_show_about_activate" swapped="no"/>
-  </object>
   <object class="GtkWindow" id="accounting_window">
     <property name="can_focus">False</property>
     <accel-groups>
@@ -162,6 +148,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="ypad">18</property>
+                    <property name="label" translatable="yes">January Licensing Fees</property>
                     <attributes>
                       <attribute name="scale" value="1.2"/>
                     </attributes>
@@ -238,11 +225,24 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <placeholder/>
+              <object class="GtkLabel" id="label1">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="ypad">2</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
               <object class="GtkSpinner" id="activity_indicator">
                 <property name="can_focus">False</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
+                <property name="margin_top">5</property>
+                <property name="margin_bottom">5</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -252,9 +252,10 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="status_description">
+              <object class="GtkLabel" id="activity_description">
                 <property name="can_focus">False</property>
                 <property name="ypad">1</property>
+                <property name="label" translatable="yes">Working...</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -276,17 +277,30 @@
   <object class="GtkAboutDialog" id="about_dialog">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
-    <property name="window_position">center-always</property>
+    <property name="window_position">center-on-parent</property>
     <property name="destroy_with_parent">True</property>
-    <property name="type_hint">dialog</property>
+    <property name="type_hint">splashscreen</property>
     <property name="transient_for">accounting_window</property>
     <property name="program_name">Accounting Client</property>
     <property name="version">dev</property>
     <property name="website">http://gitorious.org/conservancy/accounting-api</property>
     <property name="website_label" translatable="yes">Source code</property>
-    <property name="license_type">lgpl-2-1</property>
     <signal name="close" handler="on_about_dialog_close" swapped="no"/>
     <signal name="response" handler="on_about_dialog_response" swapped="no"/>
+  </object>
+  <object class="GtkListStore" id="posting_store">
+    <columns>
+      <!-- column-name Account -->
+      <column type="gchararray"/>
+      <!-- column-name Amount -->
+      <column type="gchararray"/>
+      <!-- column-name Symbol -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkAction" id="show_about">
+    <property name="label" translatable="yes">About</property>
+    <signal name="activate" handler="on_show_about_activate" swapped="no"/>
   </object>
   <object class="GtkAccelGroup" id="transaction_accel_group"/>
   <object class="GtkActionGroup" id="transaction_actions">

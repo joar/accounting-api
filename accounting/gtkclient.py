@@ -21,7 +21,7 @@ def indicate_activity(func_or_str):
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kw):
-            self.status_description.set_text(description)
+            self.activity_description.set_text(description)
             self.activity_indicator.show()
             self.activity_indicator.start()
 
@@ -40,7 +40,7 @@ def indicate_activity(func_or_str):
 def indicate_activity_done(func):
     @wraps(func)
     def wrapper(self, *args, **kw):
-        self.status_description.set_text('')
+        self.activity_description.set_text('')
         self.activity_indicator.stop()
         self.activity_indicator.hide()
 

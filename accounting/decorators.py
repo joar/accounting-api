@@ -1,3 +1,7 @@
+# Part of accounting-api project:
+# https://gitorious.org/conservancy/accounting-api
+# License: AGPLv3-or-later
+
 from functools import wraps
 
 from flask import jsonify

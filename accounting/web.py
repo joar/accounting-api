@@ -1,3 +1,7 @@
+# Part of accounting-api project:
+# https://gitorious.org/conservancy/accounting-api
+# License: AGPLv3-or-later
+
 '''
 This module contains the high-level webservice logic such as the Flask setup
 and the Flask endpoints.

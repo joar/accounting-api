@@ -11,6 +11,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 
+from accounting.storage import Storage
 from accounting.storage.ledgercli import Ledger
 from accounting.storage.sql import SQLStorage
 from accounting.transport import AccountingEncoder, AccountingDecoder
@@ -21,7 +22,7 @@ from accounting.decorators import jsonify_exceptions
 app = Flask('accounting')
 app.config.from_pyfile('config.py')
 
-storage = Ledger(app=app)
+storage = Storage()
 
 if isinstance(storage, SQLStorage):
     # TODO: Move migration stuff into SQLStorage
@@ -151,6 +152,9 @@ def main(argv=None):
                         default='INFO',
                         help=('Filter logging output. Possible values:' +
                               ' CRITICAL, ERROR, WARNING, INFO, DEBUG'))
+
+    global storage
+    storage = Ledger(app=app)
 
     args = parser.parse_args(argv)
 

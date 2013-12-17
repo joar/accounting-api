@@ -27,6 +27,10 @@ class Storage():
         raise NotImplementedError
 
     @abstractmethod
+    def add_transaction(self, transaction):
+        raise NotImplementedError
+
+    @abstractmethod
     def update_transaction(self, transaction):
         raise NotImplementedError
 

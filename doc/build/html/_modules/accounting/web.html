@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>accounting.web &mdash; Accounting API 0.1-beta documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1-beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Accounting API 0.1-beta documentation" href="../../index.html" />
+    <link rel="up" title="accounting" href="../accounting.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../accounting.html" accesskey="U">accounting</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for accounting.web</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">This module contains the high-level webservice logic such as the Flask setup</span>
+<span class="sd">and the Flask endpoints.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">request</span>
+
+<span class="kn">from</span> <span class="nn">accounting</span> <span class="kn">import</span> <span class="n">Ledger</span>
+<span class="kn">from</span> <span class="nn">accounting.transport</span> <span class="kn">import</span> <span class="n">AccountingEncoder</span><span class="p">,</span> <span class="n">AccountingDecoder</span>
+<span class="kn">from</span> <span class="nn">accounting.exceptions</span> <span class="kn">import</span> <span class="n">AccountingException</span>
+<span class="kn">from</span> <span class="nn">accounting.decorators</span> <span class="kn">import</span> <span class="n">jsonify_exceptions</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s">&#39;accounting&#39;</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">from_pyfile</span><span class="p">(</span><span class="s">&#39;config.py&#39;</span><span class="p">)</span>
+
+<span class="n">ledger</span> <span class="o">=</span> <span class="bp">None</span>
+
+<span class="nd">@app.before_request</span>
+<div class="viewcode-block" id="init_ledger"><a class="viewcode-back" href="../../api/accounting.html#accounting.web.init_ledger">[docs]</a><span class="k">def</span> <span class="nf">init_ledger</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    :py:meth:`flask.Flask.before_request`-decorated method that initializes an</span>
+<span class="sd">    :py:class:`accounting.Ledger` object.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">global</span> <span class="n">ledger</span>
+    <span class="n">ledger</span> <span class="o">=</span> <span class="n">Ledger</span><span class="p">(</span><span class="n">ledger_file</span><span class="o">=</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;LEDGER_FILE&#39;</span><span class="p">])</span>
+
+
+<span class="c"># These will convert output from our internal classes to JSON and back</span></div>
+<span class="n">app</span><span class="o">.</span><span class="n">json_encoder</span> <span class="o">=</span> <span class="n">AccountingEncoder</span>
+<span class="n">app</span><span class="o">.</span><span class="n">json_decoder</span> <span class="o">=</span> <span class="n">AccountingDecoder</span>
+
+
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="index"><a class="viewcode-back" href="../../api/accounting.html#accounting.web.index">[docs]</a><span class="k">def</span> <span class="nf">index</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39; Hello World! &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="s">&#39;Hello World!&#39;</span>
+
+</div>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/balance&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="balance_report"><a class="viewcode-back" href="../../api/accounting.html#accounting.web.balance_report">[docs]</a><span class="k">def</span> <span class="nf">balance_report</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns the JSON-serialized result of :meth:`accounting.Ledger.bal`</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">report_data</span> <span class="o">=</span> <span class="n">ledger</span><span class="o">.</span><span class="n">bal</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">balance_report</span><span class="o">=</span><span class="n">report_data</span><span class="p">)</span>
+</div>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/transaction&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="transaction_get"><a class="viewcode-back" href="../../api/accounting.html#accounting.web.transaction_get">[docs]</a><span class="k">def</span> <span class="nf">transaction_get</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns the JSON-serialized output of :meth:`accounting.Ledger.reg`</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">transactions</span><span class="o">=</span><span class="n">ledger</span><span class="o">.</span><span class="n">reg</span><span class="p">())</span>
+</div>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/transaction&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;POST&#39;</span><span class="p">])</span>
+<span class="nd">@jsonify_exceptions</span>
+<div class="viewcode-block" id="transaction_post"><a class="viewcode-back" href="../../api/accounting.html#accounting.web.transaction_post">[docs]</a><span class="k">def</span> <span class="nf">transaction_post</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    REST/JSON endpoint for transactions.</span>
+
+<span class="sd">    Current state:</span>
+
+<span class="sd">    Takes a POST request with a ``transactions`` JSON payload and writes it to</span>
+<span class="sd">    the ledger file.</span>
+
+<span class="sd">    Requires the ``transactions`` payload to be __type__-annotated:</span>
+
+<span class="sd">    .. code-block:: json</span>
+
+<span class="sd">        {</span>
+<span class="sd">          &quot;transactions&quot;: [</span>
+<span class="sd">            {</span>
+<span class="sd">              &quot;__type__&quot;: &quot;Transaction&quot;,</span>
+<span class="sd">              &quot;date&quot;: &quot;2013-01-01&quot;,</span>
+<span class="sd">              &quot;payee&quot;: &quot;Kindly T. Donor&quot;,</span>
+<span class="sd">              &quot;postings&quot;: [</span>
+<span class="sd">                {</span>
+<span class="sd">                  &quot;__type__&quot;: &quot;Posting&quot;,</span>
+<span class="sd">                  &quot;account&quot;: &quot;Income:Foo:Donation&quot;,</span>
+<span class="sd">                  &quot;amount&quot;: {</span>
+<span class="sd">                    &quot;__type__&quot;: &quot;Amount&quot;,</span>
+<span class="sd">                    &quot;amount&quot;: &quot;-100&quot;,</span>
+<span class="sd">                    &quot;symbol&quot;: &quot;$&quot;</span>
+<span class="sd">                  }</span>
+<span class="sd">                },</span>
+<span class="sd">                {</span>
+<span class="sd">                  &quot;__type__&quot;: &quot;Posting&quot;,</span>
+<span class="sd">                  &quot;account&quot;: &quot;Assets:Checking&quot;,</span>
+<span class="sd">                  &quot;amount&quot;: {</span>
+<span class="sd">                    &quot;__type__&quot;: &quot;Amount&quot;,</span>
+<span class="sd">                    &quot;amount&quot;: &quot;100&quot;,</span>
+<span class="sd">                    &quot;symbol&quot;: &quot;$&quot;</span>
+<span class="sd">                  }</span>
+<span class="sd">                }</span>
+<span class="sd">              ]</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+
+<span class="sd">    becomes::</span>
+
+<span class="sd">        2013-01-01 Kindly T. Donor</span>
+<span class="sd">          Income:Foo:Donation                                         $ -100</span>
+<span class="sd">          Assets:Checking                                              $ 100</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">transactions</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;transactions&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">transactions</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">AccountingException</span><span class="p">(</span><span class="s">&#39;No transaction data provided&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">transactions</span><span class="p">:</span>
+        <span class="n">ledger</span><span class="o">.</span><span class="n">add_transaction</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s">&#39;bar&#39;</span><span class="p">)</span>
+
+</div>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/parse-json&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="parse_json"><a class="viewcode-back" href="../../api/accounting.html#accounting.web.parse_json">[docs]</a><span class="k">def</span> <span class="nf">parse_json</span><span class="p">():</span>
+    <span class="sd">r&#39;&#39;&#39;</span>
+<span class="sd">    Parses a __type__-annotated JSON payload and debug-logs the decoded version</span>
+<span class="sd">    of it.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: bash</span>
+
+<span class="sd">        wget http://127.0.0.1:5000/balance -O balance.json</span>
+<span class="sd">        curl -X POST -H &#39;Content-Type: application/json&#39; -d @balance.json \</span>
+<span class="sd">            http://127.0.0.1/parse-json</span>
+<span class="sd">        # Logging output (linebreaks added for clarity)</span>
+<span class="sd">        # DEBUG:accounting:json data: {&#39;balance_report&#39;:</span>
+<span class="sd">        #    [&lt;Account &quot;None&quot; [</span>
+<span class="sd">        #        &lt;Amount $ 0&gt;, &lt;Amount KARMA 0&gt;]</span>
+<span class="sd">        #        [&lt;Account &quot;Assets&quot; [</span>
+<span class="sd">        #            &lt;Amount $ 50&gt;, &lt;Amount KARMA 10&gt;]</span>
+<span class="sd">        #            [&lt;Account &quot;Assets:Checking&quot; [</span>
+<span class="sd">        #                &lt;Amount $ 50&gt;] []&gt;,</span>
+<span class="sd">        #             &lt;Account &quot;Assets:Karma Account&quot; [</span>
+<span class="sd">        #                &lt;Amount KARMA 10&gt;] []&gt;]&gt;,</span>
+<span class="sd">        #         &lt;Account &quot;Expenses&quot; [</span>
+<span class="sd">        #            &lt;Amount $ 500&gt;]</span>
+<span class="sd">        #            [&lt;Account &quot;Expenses:Blah&quot; [</span>
+<span class="sd">        #                &lt;Amount $ 250&gt;]</span>
+<span class="sd">        #                [&lt;Account &quot;Expenses:Blah:Hosting&quot; [</span>
+<span class="sd">        #                    &lt;Amount $ 250&gt;] []&gt;]&gt;,</span>
+<span class="sd">        #             &lt;Account &quot;Expenses:Foo&quot; [</span>
+<span class="sd">        #                &lt;Amount $ 250&gt;] [</span>
+<span class="sd">        #                &lt;Account &quot;Expenses:Foo:Hosting&quot; [</span>
+<span class="sd">        #                    &lt;Amount $ 250&gt;] []&gt;]&gt;]&gt;,</span>
+<span class="sd">        #         &lt;Account &quot;Income&quot; [</span>
+<span class="sd">        #            &lt;Amount $ -550&gt;,</span>
+<span class="sd">        #            &lt;Amount KARMA -10&gt;]</span>
+<span class="sd">        #            [&lt;Account &quot;Income:Donation&quot; [</span>
+<span class="sd">        #                &lt;Amount $ -50&gt;] []&gt;,</span>
+<span class="sd">        #             &lt;Account &quot;Income:Foo&quot; [</span>
+<span class="sd">        #                &lt;Amount $ -500&gt;]</span>
+<span class="sd">        #                [&lt;Account &quot;Income:Foo:Donation&quot; [</span>
+<span class="sd">        #                    &lt;Amount $ -500&gt;] []&gt;]&gt;,</span>
+<span class="sd">        #             &lt;Account &quot;Income:Karma&quot; [</span>
+<span class="sd">        #             &lt;Amount KARMA -10&gt;] []&gt;]&gt;]&gt;]}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;json data: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s">&#39;bar&#39;</span><span class="p">)</span>
+
+</div>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/register&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="register_report"><a class="viewcode-back" href="../../api/accounting.html#accounting.web.register_report">[docs]</a><span class="k">def</span> <span class="nf">register_report</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns the JSON-serialized output of :py:meth:`accounting.Ledger.reg`</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">report_data</span> <span class="o">=</span> <span class="n">ledger</span><span class="o">.</span><span class="n">reg</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">register_report</span><span class="o">=</span><span class="n">report_data</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../api/accounting.html#accounting.web.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">__name__</span>
+    <span class="k">if</span> <span class="n">argv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">prog</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">argv</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="n">prog</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-v&#39;</span><span class="p">,</span> <span class="s">&#39;--verbosity&#39;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="s">&#39;INFO&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;Filter logging output. Possible values:&#39;</span> <span class="o">+</span>
+                        <span class="s">&#39; CRITICAL, ERROR, WARNING, INFO, DEBUG&#39;</span><span class="p">))</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">verbosity</span><span class="p">,</span> <span class="s">&#39;INFO&#39;</span><span class="p">))</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;HOST&#39;</span><span class="p">],</span> <span class="n">port</span><span class="o">=</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;PORT&#39;</span><span class="p">])</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../accounting.html" >accounting</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Joar Wandborg.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
+    </div>
+  </body>
+</html>

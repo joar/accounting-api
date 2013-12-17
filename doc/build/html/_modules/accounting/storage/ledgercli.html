@@ -1,0 +1,429 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>accounting.storage.ledgercli &mdash; Accounting API 0.1-beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1-beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Accounting API 0.1-beta documentation" href="../../../index.html" />
+    <link rel="up" title="accounting.storage" href="../storage.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../accounting.html" >accounting</a> &raquo;</li>
+          <li><a href="../storage.html" accesskey="U">accounting.storage</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for accounting.storage.ledgercli</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">xml.etree</span> <span class="kn">import</span> <span class="n">ElementTree</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+
+<span class="kn">from</span> <span class="nn">accounting.models</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Transaction</span><span class="p">,</span> <span class="n">Posting</span><span class="p">,</span> <span class="n">Amount</span>
+<span class="kn">from</span> <span class="nn">accounting.storage</span> <span class="kn">import</span> <span class="n">Storage</span>
+
+<span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Ledger"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger">[docs]</a><span class="k">class</span> <span class="nc">Ledger</span><span class="p">(</span><span class="n">Storage</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ledger_file</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ledger_bin</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">app</span><span class="p">:</span>
+            <span class="n">ledger_file</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;LEDGER_FILE&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">ledger_file</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;ledger_file cannot be None&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ledger_bin</span> <span class="o">=</span> <span class="n">ledger_bin</span> <span class="ow">or</span> <span class="s">&#39;ledger&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ledger_file</span> <span class="o">=</span> <span class="n">ledger_file</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;ledger file: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">ledger_file</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">locked</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ledger_process</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="nd">@contextmanager</span>
+<div class="viewcode-block" id="Ledger.locked_process"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.locked_process">[docs]</a>    <span class="k">def</span> <span class="nf">locked_process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">r&#39;&#39;&#39;</span>
+<span class="sd">        Context manager that checks that the ledger process is not already</span>
+<span class="sd">        locked, then &quot;locks&quot; the process and yields the process handle and</span>
+<span class="sd">        unlocks the process when execution is returned.</span>
+
+<span class="sd">        Since this decorated as a :func:`contextlib.contextmanager` the</span>
+<span class="sd">        recommended use is with the ``with``-statement.</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            with self.locked_process() as p:</span>
+<span class="sd">                p.stdin.write(b&#39;bal\n&#39;)</span>
+
+<span class="sd">                output = self.read_until_prompt(p)</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">locked</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;The process has already been locked,&#39;</span>
+                               <span class="s">&#39; something</span><span class="se">\&#39;</span><span class="s">s out of order.&#39;</span><span class="p">)</span>
+
+            <span class="c"># XXX: This code has no purpose in a single-threaded process</span>
+            <span class="n">timeout</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c"># Seconds</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">+</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">timeout</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;Ledger process is already locked&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">locked</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Waiting for one second... </span><span class="si">%d</span><span class="s">/</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_process</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">locked</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Lock enabled&#39;</span><span class="p">)</span>
+
+        <span class="k">yield</span> <span class="n">process</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">locked</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Lock disabled&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ledger.assemble_arguments"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.assemble_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">assemble_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns a list of arguments suitable for :class:`subprocess.Popen`</span>
+<span class="sd">        based on :attr:`self.ledger_bin` and :attr:`self.ledger_file`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ledger_bin</span><span class="p">,</span>
+            <span class="s">&#39;-f&#39;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ledger_file</span><span class="p">,</span>
+        <span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Ledger.init_process"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.init_process">[docs]</a>    <span class="k">def</span> <span class="nf">init_process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Creates a new (presumably) ledger subprocess based on the args from</span>
+<span class="sd">        :meth:`Ledger.assemble_arguments()` and then runs</span>
+<span class="sd">        :meth:`Ledger.read_until_prompt()` once (which should return the banner</span>
+<span class="sd">        text) and discards the output.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Starting ledger process...&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ledger_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assemble_arguments</span><span class="p">(),</span>
+            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+
+        <span class="c"># Swallow the banner</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">locked_process</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">read_until_prompt</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ledger_process</span>
+</div>
+<div class="viewcode-block" id="Ledger.get_process"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.get_process">[docs]</a>    <span class="k">def</span> <span class="nf">get_process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns :attr:`self.ledger_process` if it evaluates to ``True``. If</span>
+<span class="sd">        :attr:`self.ledger_process` is not set the result of</span>
+<span class="sd">        :meth:`self.init_process() &lt;Ledger.init_process&gt;` is returned.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ledger_process</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_process</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Ledger.read_until_prompt"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.read_until_prompt">[docs]</a>    <span class="k">def</span> <span class="nf">read_until_prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
+        <span class="sd">r&#39;&#39;&#39;</span>
+<span class="sd">        Reads from the subprocess instance :data:`process` until it finds a</span>
+<span class="sd">        combination of ``\n]\x20`` (the prompt), then returns the output</span>
+<span class="sd">        without the prompt.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">b</span><span class="s">&#39;&#39;</span>
+
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c"># XXX: This is a hack</span>
+
+            <span class="n">output</span> <span class="o">+=</span> <span class="n">line</span>
+
+            <span class="k">if</span> <span class="n">b</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">] &#39;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+                <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Found prompt!&#39;</span><span class="p">)</span>
+                <span class="k">break</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>  <span class="c"># Cut away the prompt</span>
+
+        <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;output: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+</div>
+<div class="viewcode-block" id="Ledger.send_command"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.send_command">[docs]</a>    <span class="k">def</span> <span class="nf">send_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">locked_process</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">command</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">)</span>
+
+            <span class="n">p</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">command</span> <span class="o">+</span> <span class="n">b</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_until_prompt</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">ledger_process</span><span class="o">.</span><span class="n">send_signal</span><span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
+            <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Waiting for ledger to shut down&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ledger_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ledger_process</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="k">return</span> <span class="n">output</span>
+</div>
+<div class="viewcode-block" id="Ledger.add_transaction"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.add_transaction">[docs]</a>    <span class="k">def</span> <span class="nf">add_transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transaction</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Writes a transaction to the ledger file by opening it in &#39;ab&#39; mode and</span>
+<span class="sd">        writing a ledger transaction based on the</span>
+<span class="sd">        :class:`~accounting.models.Transaction` instance in</span>
+<span class="sd">        :data:`transaction`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">transaction</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;Id&#39;</span><span class="p">):</span>
+            <span class="n">transaction</span><span class="o">.</span><span class="n">generate_id</span><span class="p">()</span>
+
+        <span class="n">transaction_template</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">{date} {t.payee}</span><span class="se">\n</span><span class="s">&#39;</span>
+                                <span class="s">&#39;{tags}&#39;</span>
+                                <span class="s">&#39;{postings}&#39;</span><span class="p">)</span>
+
+        <span class="n">metadata_template</span> <span class="o">=</span> <span class="s">&#39;   ;{0}: {1}</span><span class="se">\n</span><span class="s">&#39;</span>
+
+        <span class="c"># TODO: Generate metadata for postings</span>
+        <span class="n">posting_template</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;  {account} {p.amount.symbol}&#39;</span>
+                            <span class="s">&#39; {p.amount.amount}</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="n">b</span><span class="s">&#39;&#39;</span>
+
+        <span class="c"># XXX: Even I hardly understands what this does, however I indent it it</span>
+        <span class="c"># stays unreadable.</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="n">transaction_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">date</span><span class="o">=</span><span class="n">transaction</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">),</span>
+            <span class="n">t</span><span class="o">=</span><span class="n">transaction</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+                <span class="n">metadata_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">transaction</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">items</span><span class="p">()]),</span>
+            <span class="n">postings</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">posting_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span>
+                <span class="n">account</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">account</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span>
+                    <span class="mi">80</span> <span class="o">-</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">account</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span> <span class="o">+</span>
+                          <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">amount</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">transaction</span><span class="o">.</span><span class="n">postings</span>
+            <span class="p">])</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ledger_file</span><span class="p">,</span> <span class="s">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;written to file: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ledger.bal"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.bal">[docs]</a>    <span class="k">def</span> <span class="nf">bal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_command</span><span class="p">(</span><span class="s">&#39;xml&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;bal call returned no output&#39;</span><span class="p">)</span>
+
+        <span class="n">accounts</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">xml</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">))</span>
+
+        <span class="n">accounts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recurse_accounts</span><span class="p">(</span><span class="n">xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;./accounts&#39;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">accounts</span>
+</div>
+    <span class="k">def</span> <span class="nf">_recurse_accounts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+        <span class="n">accounts</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">account</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&#39;./account&#39;</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;./fullname&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+
+            <span class="n">amounts</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c"># Try to find an account total value, then try to find the account</span>
+            <span class="c"># balance</span>
+            <span class="n">account_amounts</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span>
+                <span class="s">&#39;./account-total/balance/amount&#39;</span><span class="p">)</span> <span class="ow">or</span> \
+                <span class="n">account</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&#39;./account-amount/amount&#39;</span><span class="p">)</span> <span class="ow">or</span> \
+                <span class="n">account</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&#39;./account-total/amount&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">account_amounts</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">amount</span> <span class="ow">in</span> <span class="n">account_amounts</span><span class="p">:</span>
+                    <span class="n">quantity</span> <span class="o">=</span> <span class="n">amount</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;./quantity&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+                    <span class="n">symbol</span> <span class="o">=</span> <span class="n">amount</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;./commodity/symbol&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+
+                    <span class="n">amounts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Amount</span><span class="p">(</span><span class="n">amount</span><span class="o">=</span><span class="n">quantity</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">symbol</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;Account </span><span class="si">%s</span><span class="s"> does not have any amounts&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+            <span class="n">accounts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Account</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                    <span class="n">amounts</span><span class="o">=</span><span class="n">amounts</span><span class="p">,</span>
+                                    <span class="n">accounts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_recurse_accounts</span><span class="p">(</span><span class="n">account</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">accounts</span>
+
+<div class="viewcode-block" id="Ledger.get_transactions"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.get_transactions">[docs]</a>    <span class="k">def</span> <span class="nf">get_transactions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Ledger.reg"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.reg">[docs]</a>    <span class="k">def</span> <span class="nf">reg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_command</span><span class="p">(</span><span class="s">&#39;xml&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;reg call returned no output&#39;</span><span class="p">)</span>
+
+        <span class="n">entries</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">reg_xml</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">reg_xml</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&#39;./transactions/transaction&#39;</span><span class="p">):</span>
+            <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">transaction</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;./date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+                                     <span class="s">&#39;%Y/%m/</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="n">payee</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;./payee&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+
+            <span class="n">postings</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">posting</span> <span class="ow">in</span> <span class="n">transaction</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&#39;./postings/posting&#39;</span><span class="p">):</span>
+                <span class="n">account</span> <span class="o">=</span> <span class="n">posting</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;./account/name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+                <span class="n">amount</span> <span class="o">=</span> <span class="n">posting</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;./post-amount/amount/quantity&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+                <span class="n">symbol</span> <span class="o">=</span> <span class="n">posting</span><span class="o">.</span><span class="n">find</span><span class="p">(</span>
+                    <span class="s">&#39;./post-amount/amount/commodity/symbol&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+
+                <span class="c"># Get the posting metadata</span>
+                <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
+
+                <span class="n">values</span> <span class="o">=</span> <span class="n">posting</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&#39;./metadata/value&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">values</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                        <span class="n">key</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">)</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;./string&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+
+                        <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;metadata: </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+                        <span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
+
+                <span class="n">postings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">Posting</span><span class="p">(</span><span class="n">account</span><span class="o">=</span><span class="n">account</span><span class="p">,</span>
+                            <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+                            <span class="n">amount</span><span class="o">=</span><span class="n">Amount</span><span class="p">(</span><span class="n">amount</span><span class="o">=</span><span class="n">amount</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">symbol</span><span class="p">)))</span>
+
+            <span class="c"># Get the transaction metadata</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="n">values</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&#39;./metadata/value&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">values</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">)</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;./string&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+
+                    <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;metadata: </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+                    <span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
+
+            <span class="c"># Add a Transaction instance to the list</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;Id&#39;</span><span class="p">)</span>
+            <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">Transaction</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">id</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="n">date</span><span class="p">,</span> <span class="n">payee</span><span class="o">=</span><span class="n">payee</span><span class="p">,</span> <span class="n">postings</span><span class="o">=</span><span class="n">postings</span><span class="p">,</span>
+                            <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">entries</span>
+</div>
+<div class="viewcode-block" id="Ledger.update_transaction"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.update_transaction">[docs]</a>    <span class="k">def</span> <span class="nf">update_transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transaction</span><span class="p">):</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;DUMMY: Updated transaction: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">transaction</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">argparse</span>
+    <span class="k">if</span> <span class="n">argv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">argv</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-v&#39;</span><span class="p">,</span> <span class="s">&#39;--verbosity&#39;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="s">&#39;INFO&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;Filter logging output. Possible values:&#39;</span> <span class="o">+</span>
+                              <span class="s">&#39; CRITICAL, ERROR, WARNING, INFO, DEBUG&#39;</span><span class="p">))</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">verbosity</span><span class="p">,</span> <span class="s">&#39;INFO&#39;</span><span class="p">))</span>
+    <span class="n">ledger</span> <span class="o">=</span> <span class="n">Ledger</span><span class="p">(</span><span class="n">ledger_file</span><span class="o">=</span><span class="s">&#39;non-profit-test-data.ledger&#39;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">bal</span><span class="p">())</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">reg</span><span class="p">())</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../accounting.html" >accounting</a> &raquo;</li>
+          <li><a href="../storage.html" >accounting.storage</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Joar Wandborg.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
+    </div>
+  </body>
+</html>

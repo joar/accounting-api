@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The Accounting API &mdash; Accounting API 0.1-beta documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1-beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Accounting API 0.1-beta documentation" href="index.html" />
+    <link rel="next" title="accounting package" href="api/accounting.html" />
+    <link rel="prev" title="Welcome to Accounting API’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api/accounting.html" title="accounting package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Accounting API’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Accounting API 0.1-beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="the-accounting-api">
+<h1>The Accounting API<a class="headerlink" href="#the-accounting-api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Python &gt;=3.3</li>
+<li>ledger version 3 (I have not tried with version 2.x)</li>
+<li>Python packages: Flask, etc. (install by running <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span>
+<span class="pre">requirements.txt</span></tt>)</li>
+</ul>
+<div class="section" id="gtk-client-dependencies">
+<h3>GTK Client Dependencies<a class="headerlink" href="#gtk-client-dependencies" title="Permalink to this headline">¶</a></h3>
+<p>To run the GTK client you need to have <tt class="docutils literal"><span class="pre">gi.repository</span></tt> avaiable in the python
+environment, this means that if you use virtualenv to install the dependencies
+of accounting-api you need to set it up with the <tt class="docutils literal"><span class="pre">--system-site-packages</span></tt>
+flag.</p>
+</div>
+</div>
+<div class="section" id="installation-i-e-development-setup">
+<h2>Installation (i.e. Development Setup)<a class="headerlink" href="#installation-i-e-development-setup" title="Permalink to this headline">¶</a></h2>
+<p>accounting-api does not yet have a method for end-user installation. This
+section describes how you would set up accounting-api for development purposes,
+which can also be used as an environment to try out the functionality of
+accounting-api.</p>
+<p>See the sections below on how to install the dependencies. Then run the
+following in your shell.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Get the source code</span>
+git clone git://gitorious.org/conservancy/accounting-api.git
+<span class="nb">cd </span>accounting-api
+
+<span class="c"># Set up the python 3.3 virtualenv (this will make the GTK client not work)</span>
+mkvirtualenv -p /usr/bin/python3.3 accounting-api
+<span class="c"># OR If you want the GTK client to work</span>
+mkvirtualenv -p /usr/bin/python3.3 --system-site-packages accounting-api
+
+<span class="c"># If your terminal prompt does not say &quot;(accounting-api)&quot;, run</span>
+workon accounting-api
+
+<span class="c"># Install the python packages</span>
+pip-3.3 install -r requirements.txt
+</pre></div>
+</div>
+<p>If all went well, head to <a class="reference internal" href="#usage"><em>Usage</em></a>. If not, head to the channel <tt class="docutils literal"><span class="pre">#npoacct</span></tt>
+on <tt class="docutils literal"><span class="pre">irc.freenode.net</span></tt>.</p>
+<div class="section" id="ubuntu">
+<h3>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># git python 3.3 and virtualenvwrapper</span>
+sudo apt-get install git-core python3.3 virtualenvwrapper
+
+<span class="c"># ledger 3</span>
+sudo apt-add-repository ppa:mbudde/ledger
+sudo apt-get update
+sudo apt-get install ledger
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="usage">
+<span id="id1"></span><h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Run the web service</span>
+<span class="nv">LEDGER_FILE</span><span class="o">=</span>../path/to/your.ledger ./bin/serve
+
+<span class="c"># Get a balance report via the web service</span>
+./bin/client balance
+
+<span class="c"># Get the transaction log</span>
+./bin/client register
+
+<span class="c"># Insert a simple transaction, currency will be autodetected from your</span>
+<span class="c"># locale, for another currency, use ``--symbol USD``</span>
+./bin/client insert <span class="s2">&quot;January rent&quot;</span> Assets:Checking Expenses:Rent 654.32
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">The Accounting API</a><ul>
+<li><a class="reference internal" href="#dependencies">Dependencies</a><ul>
+<li><a class="reference internal" href="#gtk-client-dependencies">GTK Client Dependencies</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#installation-i-e-development-setup">Installation (i.e. Development Setup)</a><ul>
+<li><a class="reference internal" href="#ubuntu">Ubuntu</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Accounting API&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api/accounting.html"
+                        title="next chapter">accounting package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/README.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api/accounting.html" title="accounting package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Accounting API’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">Accounting API 0.1-beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Joar Wandborg.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
+    </div>
+  </body>
+</html>

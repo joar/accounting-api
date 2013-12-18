@@ -362,7 +362,8 @@ class Ledger(Storage):
                 break
 
         if not semantic_lines['id_location']:
-            raise TransactionNotFound('No transaction with ID "%s" found')
+            raise TransactionNotFound(
+                'No transaction with ID "{0}" found'.format(transaction_id))
 
         transaction_start_pattern = re.compile(r'^\S')
 
@@ -422,8 +423,8 @@ class Ledger(Storage):
         :data:`transaction` to the database.
         '''
         if not transaction.id:
-            return AccountingException('The transaction %s has no'
-                                       ' id attribute', transaction)
+            return AccountingException(('The transaction {0} has no'
+                                        ' id attribute').format(transaction))
 
         old_transaction = self.get_transaction(transaction.id)
 

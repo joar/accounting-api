@@ -102,7 +102,19 @@ based on <tt class="xref py py-attr docutils literal"><span class="pre">self.led
 <dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.delete_transaction">
 <tt class="descname">delete_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.delete_transaction" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Delete a transaction from the ledger file.</p>
+<p>This method opens the ledger file, loads all lines into memory and
+looks for the transaction_id, then looks for the bounds of that
+transaction in the ledger file, removes all lines within the bounds of
+the transaction and removes them, then writes the lines back to the
+ledger file.</p>
+<p>Exceptions:</p>
+<ul class="simple">
+<li>RuntimeError: If all boundaries to the transaction are not found</li>
+<li>TransactionNotFound: If no such transaction_id can be found in
+<tt class="xref py py-data docutils literal"><span class="pre">self.ledger_file</span></tt></li>
+</ul>
+</dd></dl>
 
 <dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.get_process">
@@ -168,7 +180,12 @@ without the prompt.</p>
 <dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.update_transaction">
 <tt class="descname">update_transaction</tt><big>(</big><em>transaction</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.update_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.update_transaction" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Update a transaction in the ledger file.</p>
+<p>Takes a <a class="reference internal" href="accounting.html#accounting.models.Transaction" title="accounting.models.Transaction"><tt class="xref py py-class docutils literal"><span class="pre">Transaction</span></tt></a> object and removes
+the old transaction using <tt class="xref py py-data docutils literal"><span class="pre">transaction.id</span></tt> from the passed
+<a class="reference internal" href="accounting.html#accounting.models.Transaction" title="accounting.models.Transaction"><tt class="xref py py-class docutils literal"><span class="pre">Transaction</span></tt></a> instance and adds
+<tt class="xref py py-data docutils literal"><span class="pre">transaction</span></tt> to the database.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -188,6 +205,11 @@ without the prompt.</p>
 <dl class="method">
 <dt id="accounting.storage.Storage.add_transaction">
 <tt class="descname">add_transaction</tt><big>(</big><em>transaction</em><big>)</big><a class="headerlink" href="#accounting.storage.Storage.add_transaction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="accounting.storage.Storage.delete_transaction">
+<tt class="descname">delete_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="headerlink" href="#accounting.storage.Storage.delete_transaction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

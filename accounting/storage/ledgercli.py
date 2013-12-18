@@ -6,13 +6,15 @@ import sys
 import subprocess
 import logging
 import time
+import re
 
 from datetime import datetime
 from xml.etree import ElementTree
 from contextlib import contextmanager
 
+from accounting.exceptions import AccountingException
 from accounting.models import Account, Transaction, Posting, Amount
-from accounting.storage import Storage
+from accounting.storage import Storage, TransactionNotFound
 
 _log = logging.getLogger(__name__)
 
@@ -205,6 +207,8 @@ class Ledger(Storage):
 
         _log.debug('written to file: %s', output)
 
+        return transaction.id
+
     def bal(self):
         output = self.send_command('xml')
 
@@ -251,6 +255,16 @@ class Ledger(Storage):
 
     def get_transactions(self):
         return self.reg()
+
+    def get_transaction(self, transaction_id):
+        transactions = self.get_transactions()
+
+        for transaction in transactions:
+            if transaction.id == transaction_id:
+                return transaction
+
+        raise TransactionNotFound('No transaction with id %s found',
+                                  transaction_id)
 
     def reg(self):
         output = self.send_command('xml')
@@ -314,8 +328,111 @@ class Ledger(Storage):
 
         return entries
 
+    def delete_transaction(self, transaction_id):
+        '''
+        Delete a transaction from the ledger file.
+
+        This method opens the ledger file, loads all lines into memory and
+        looks for the transaction_id, then looks for the bounds of that
+        transaction in the ledger file, removes all lines within the bounds of
+        the transaction and removes them, then writes the lines back to the
+        ledger file.
+
+        Exceptions:
+
+        -   RuntimeError: If all boundaries to the transaction are not found
+        -   TransactionNotFound: If no such transaction_id can be found in
+            :data:`self.ledger_file`
+        '''
+        f = open(self.ledger_file, 'r')
+
+        lines = [i for i in f]
+
+        # A mapping of line meanings and their line numbers as found by the
+        # following logic
+        semantic_lines = dict(
+            id_location=None,
+            transaction_start=None,
+            next_transaction_or_eof=None
+        )
+
+        for i, line in enumerate(lines):
+            if transaction_id in line:
+                semantic_lines['id_location'] = i
+                break
+
+        if not semantic_lines['id_location']:
+            raise TransactionNotFound('No transaction with ID "%s" found')
+
+        transaction_start_pattern = re.compile(r'^\S')
+
+        cursor = semantic_lines['id_location'] - 1
+
+        # Find the first line of the transaction
+        while True:
+            if transaction_start_pattern.match(lines[cursor]):
+                semantic_lines['transaction_start'] = cursor
+                break
+
+            cursor -= 1
+
+        cursor = semantic_lines['id_location'] + 1
+
+        # Find the last line of the transaction
+        while True:
+            try:
+                if transaction_start_pattern.match(lines[cursor]):
+                    semantic_lines['next_transaction_or_eof'] = cursor
+                    break
+            except IndexError:
+                # Set next_line_without_starting_space_or_end_of_file to
+                # the cursor. The cursor will be an index not included in the
+                # list of lines
+                semantic_lines['next_transaction_or_eof'] = cursor
+                break
+
+            cursor += 1
+
+        if not all(map(lambda v: v is not None, semantic_lines.values())):
+            raise RuntimeError('Could not find all the values necessary for'
+                               ' safe deletion of a transaction.')
+
+        del_start = semantic_lines['transaction_start']
+
+        if len(lines) == semantic_lines['next_transaction_or_eof']:
+            _log.debug('There are no transactions below the transaction being'
+                       ' deleted. The line before the first line of the'
+                       ' transaction will be deleted.')
+            # Delete the preceding line to make the file
+            del_start -= 1
+
+        del lines[del_start:semantic_lines['next_transaction_or_eof']]
+
+        with open(self.ledger_file, 'w') as f:
+            for line in lines:
+                f.write(line)
+
     def update_transaction(self, transaction):
-        _log.debug('DUMMY: Updated transaction: %s', transaction)
+        '''
+        Update a transaction in the ledger file.
+
+        Takes a :class:`~accounting.models.Transaction` object and removes
+        the old transaction using :data:`transaction.id` from the passed
+        :class:`~accounting.models.Transaction` instance and adds
+        :data:`transaction` to the database.
+        '''
+        if not transaction.id:
+            return AccountingException('The transaction %s has no'
+                                       ' id attribute', transaction)
+
+        old_transaction = self.get_transaction(transaction.id)
+
+        self.delete_transaction(transaction.id)
+
+        self.add_transaction(transaction)
+
+        _log.debug('Updated transaction from: %s to: %s', old_transaction,
+                   transaction)
 
 
 def main(argv=None):

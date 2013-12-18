@@ -4,8 +4,10 @@
 
 from abc import ABCMeta, abstractmethod
 
+from accounting.exceptions import AccountingException
 
-class Storage():
+
+class Storage:
     '''
     ABC for accounting storage
     '''
@@ -39,5 +41,13 @@ class Storage():
         raise NotImplementedError
 
     @abstractmethod
+    def delete_transaction(self, transaction_id):
+        raise NotImplementedError
+
+    @abstractmethod
     def reverse_transaction(self, transaction_id):
         raise NotImplementedError
+
+
+class TransactionNotFound(AccountingException):
+    pass

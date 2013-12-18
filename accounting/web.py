@@ -11,7 +11,6 @@ import logging
 import argparse
 
 from flask import Flask, jsonify, request
-from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 
@@ -65,6 +64,7 @@ def transaction_get():
     '''
     return jsonify(transactions=storage.get_transactions())
 
+
 @app.route('/transaction/<string:transaction_id>', methods=['POST'])
 @jsonify_exceptions
 def transaction_update(transaction_id=None):
@@ -74,12 +74,23 @@ def transaction_update(transaction_id=None):
     transaction = request.json['transaction']
 
     if transaction.id is not None and not transaction.id == transaction_id:
-        raise AccountingException('The transaction data has an ID attribute and'
-                                  ' it is not the same ID as in the path')
+        raise AccountingException('The transaction data has an ID attribute'
+                                  ' and it is not the same ID as in the path')
     elif transaction.id is None:
         transaction.id = transaction_id
 
     storage.update_transaction(transaction)
+
+    return jsonify(status='OK')
+
+
+@app.route('/transaction/<string:transaction_id>', methods=['DELETE'])
+@jsonify_exceptions
+def transaction_delete(transaction_id=None):
+    if transaction_id is None:
+        raise AccountingException('Transaction ID cannot be None')
+
+    storage.delete_transaction(transaction_id)
 
     return jsonify(status='OK')
 
@@ -139,10 +150,12 @@ def transaction_post():
     if not transactions:
         raise AccountingException('No transaction data provided')
 
-    for transaction in transactions:
-        storage.add_transaction(transaction)
+    transaction_ids = []
 
-    return jsonify(status='OK')
+    for transaction in transactions:
+        transaction_ids.append(storage.add_transaction(transaction))
+
+    return jsonify(status='OK', transaction_ids=transaction_ids)
 
 
 def main(argv=None):

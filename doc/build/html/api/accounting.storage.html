@@ -100,12 +100,22 @@ based on <tt class="xref py py-attr docutils literal"><span class="pre">self.led
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="accounting.storage.ledgercli.Ledger.delete_transaction">
+<tt class="descname">delete_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.delete_transaction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.get_process">
 <tt class="descname">get_process</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.get_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.get_process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns <tt class="xref py py-attr docutils literal"><span class="pre">self.ledger_process</span></tt> if it evaluates to <tt class="docutils literal"><span class="pre">True</span></tt>. If
 <tt class="xref py py-attr docutils literal"><span class="pre">self.ledger_process</span></tt> is not set the result of
 <a class="reference internal" href="#accounting.storage.ledgercli.Ledger.init_process" title="accounting.storage.ledgercli.Ledger.init_process"><tt class="xref py py-meth docutils literal"><span class="pre">self.init_process()</span></tt></a> is returned.</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="accounting.storage.ledgercli.Ledger.get_transaction">
+<tt class="descname">get_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.get_transaction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.get_transactions">
@@ -176,6 +186,11 @@ without the prompt.</p>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">builtins.object</span></tt></p>
 <p>ABC for accounting storage</p>
 <dl class="method">
+<dt id="accounting.storage.Storage.add_transaction">
+<tt class="descname">add_transaction</tt><big>(</big><em>transaction</em><big>)</big><a class="headerlink" href="#accounting.storage.Storage.add_transaction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="accounting.storage.Storage.get_account">
 <tt class="descname">get_account</tt><big>(</big><em>*args</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage.html#Storage.get_account"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.Storage.get_account" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -205,6 +220,12 @@ without the prompt.</p>
 <tt class="descname">update_transaction</tt><big>(</big><em>transaction</em><big>)</big><a class="headerlink" href="#accounting.storage.Storage.update_transaction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="exception">
+<dt id="accounting.storage.TransactionNotFound">
+<em class="property">exception </em><tt class="descclassname">accounting.storage.</tt><tt class="descname">TransactionNotFound</tt><a class="headerlink" href="#accounting.storage.TransactionNotFound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="accounting.html#accounting.exceptions.AccountingException" title="accounting.exceptions.AccountingException"><tt class="xref py py-class docutils literal"><span class="pre">accounting.exceptions.AccountingException</span></tt></a></p>
 </dd></dl>
 
 </div>

@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    README
+   restapi
    api/accounting.rst
 
 

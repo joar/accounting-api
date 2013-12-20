@@ -12,9 +12,9 @@ from datetime import datetime
 from xml.etree import ElementTree
 from contextlib import contextmanager
 
-from accounting.exceptions import AccountingException
+from accounting.exceptions import AccountingException, TransactionNotFound
 from accounting.models import Account, Transaction, Posting, Amount
-from accounting.storage import Storage, TransactionNotFound
+from accounting.storage import Storage
 
 _log = logging.getLogger(__name__)
 
@@ -129,6 +129,10 @@ class Ledger(Storage):
         while True:
             line = process.stdout.read(1)  # XXX: This is a hack
 
+            if len(line) > 0:
+                pass
+                #_log.debug('line: %s', line)
+
             output += line
 
             if b'\n] ' in output:
@@ -147,6 +151,8 @@ class Ledger(Storage):
         with self.locked_process() as p:
             if isinstance(command, str):
                 command = command.encode('utf8')
+
+            _log.debug('Sending command: %r', command)
 
             p.stdin.write(command + b'\n')
             p.stdin.flush()
@@ -263,8 +269,8 @@ class Ledger(Storage):
             if transaction.id == transaction_id:
                 return transaction
 
-        raise TransactionNotFound('No transaction with id %s found',
-                                  transaction_id)
+        raise TransactionNotFound(
+            'No transaction with id {0} found'.format(transaction_id))
 
     def reg(self):
         output = self.send_command('xml')
@@ -321,7 +327,13 @@ class Ledger(Storage):
                     metadata.update({key: value})
 
             # Add a Transaction instance to the list
-            id = metadata.pop('Id')
+            try:
+                id = metadata.pop('Id')
+            except KeyError:
+                _log.warning('Transaction on %s with payee %s does not have an'
+                             ' Id attribute. A temporary ID will be used.',
+                             date, payee)
+                id = 'NO-ID'
             entries.append(
                 Transaction(id=id, date=date, payee=payee, postings=postings,
                             metadata=metadata))

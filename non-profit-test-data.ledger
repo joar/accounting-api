@@ -23,6 +23,7 @@
    Assets:Checking   $50.00
 
 2011/04/20 (2) Baz Hosting Services, LLC
+    ;Party: Baz Hosting Services, LLC
     ;Id: this is probably unique
    Expenses:Blah:Hosting   $250.00
       ;Receipt: Projects/Blah/Expenses/hosting/AprilHostingReceipt.pdf
@@ -44,3 +45,13 @@
    ;Id: 31048b9d-a5b6-41d7-951a-e7128e7c53c0
   Income:Donations:PayPal                                                $ -20.18
   Assets:Checking                                                         $ 20.18
+
+2013-12-19 AngularJS Donation
+   ;Id: 593d921c-07f9-496d-a1b7-47bb68ff00d4
+  Assets:Checking                                                      USD -10.00
+  Expenses:Donations                                                    USD 10.00
+
+2013-12-20 PageKite donation
+   ;Id: b3576a94-2a53-4d40-bd92-06b2532937f5
+  Assets:Checking                                                      USD -10.00
+  Expenses:Donations                                                    USD 10.00

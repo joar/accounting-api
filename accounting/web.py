@@ -10,16 +10,17 @@ import sys
 import logging
 import argparse
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 
+from accounting.models import Transaction
 from accounting.storage import Storage
 from accounting.storage.ledgercli import Ledger
 from accounting.storage.sql import SQLStorage
 from accounting.transport import AccountingEncoder, AccountingDecoder
 from accounting.exceptions import AccountingException
-from accounting.decorators import jsonify_exceptions
+from accounting.decorators import jsonify_exceptions, cors
 
 
 app = Flask('accounting')
@@ -56,16 +57,41 @@ def index():
     ''' Hello World! '''
     return 'Hello World!'
 
+@app.route('/client')
+def client():
+    return render_template('client.html')
+
+
+@app.route('/transaction', methods=['OPTIONS'])
+@cors()
+@jsonify_exceptions
+def transaction_options():
+    return jsonify(status='OPTIONS')
+
+
+@app.route('/transaction/<string:transaction_id>', methods=['OPTIONS'])
+@cors()
+@jsonify_exceptions
+def transaction_by_id_options(transaction_id=None):
+    return jsonify(status='OPTIONS')
+
 
 @app.route('/transaction', methods=['GET'])
-def transaction_get():
+@app.route('/transaction/<string:transaction_id>', methods=['GET'])
+@cors()
+@jsonify_exceptions
+def transaction_get(transaction_id=None):
     '''
     Returns the JSON-serialized output of :meth:`accounting.Ledger.reg`
     '''
-    return jsonify(transactions=storage.get_transactions())
+    if transaction_id is None:
+        return jsonify(transactions=storage.get_transactions())
+
+    return jsonify(transaction=storage.get_transaction(transaction_id))
 
 
 @app.route('/transaction/<string:transaction_id>', methods=['POST'])
+@cors()
 @jsonify_exceptions
 def transaction_update(transaction_id=None):
     if transaction_id is None:
@@ -85,6 +111,7 @@ def transaction_update(transaction_id=None):
 
 
 @app.route('/transaction/<string:transaction_id>', methods=['DELETE'])
+@cors()
 @jsonify_exceptions
 def transaction_delete(transaction_id=None):
     if transaction_id is None:
@@ -96,6 +123,7 @@ def transaction_delete(transaction_id=None):
 
 
 @app.route('/transaction', methods=['POST'])
+@cors()
 @jsonify_exceptions
 def transaction_post():
     '''
@@ -145,7 +173,10 @@ def transaction_post():
           Income:Foo:Donation                                         $ -100
           Assets:Checking                                              $ 100
     '''
-    transactions = request.json.get('transactions')
+    if not isinstance(request.json, Transaction):
+        transactions = request.json.get('transactions')
+    else:
+        transactions = [request.json]
 
     if not transactions:
         raise AccountingException('No transaction data provided')

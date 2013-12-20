@@ -1,4 +1,7 @@
 'use strict';
+// Part of the accounting-api project:
+// https://gitorious.org/conservancy/accounting-api
+// License: AGPLv3-or-later
 
 angular.module('accountingClient', ['ngRoute', 'accountingApi'])
 .config(function($routeProvider) {

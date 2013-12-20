@@ -6,6 +6,10 @@
 Welcome to Accounting API's documentation!
 ==========================================
 
+-----------------------
+ Accounting API
+-----------------------
+
 Contents:
 
 .. toctree::
@@ -13,8 +17,6 @@ Contents:
 
    README
    restapi
-   api/accounting.rst
-
 
 
 Indices and tables

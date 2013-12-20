@@ -8,7 +8,7 @@
     
     <title>accounting.client &mdash; Accounting API 0.1-beta documentation</title>
     
-    <link rel="stylesheet" href="../../_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/flasky.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -24,9 +24,16 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="top" title="Accounting API 0.1-beta documentation" href="../../index.html" />
-    <link rel="up" title="accounting" href="../accounting.html" /> 
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head>
   <body>
+  
+  
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -40,8 +47,7 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
-          <li><a href="../index.html" >Module code</a> &raquo;</li>
-          <li><a href="../accounting.html" accesskey="U">accounting</a> &raquo;</li> 
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -51,10 +57,15 @@
           <div class="body">
             
   <h1>Source code for accounting.client</h1><div class="highlight"><pre>
+<span class="c"># Part of accounting-api project:</span>
+<span class="c"># https://gitorious.org/conservancy/accounting-api</span>
+<span class="c"># License: AGPLv3-or-later</span>
+
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">locale</span>
 
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
@@ -63,6 +74,8 @@
 
 <span class="kn">from</span> <span class="nn">accounting.models</span> <span class="kn">import</span> <span class="n">Transaction</span><span class="p">,</span> <span class="n">Posting</span><span class="p">,</span> <span class="n">Amount</span>
 <span class="kn">from</span> <span class="nn">accounting.transport</span> <span class="kn">import</span> <span class="n">AccountingDecoder</span><span class="p">,</span> <span class="n">AccountingEncoder</span>
+
+<span class="n">locale</span><span class="o">.</span><span class="n">setlocale</span><span class="p">(</span><span class="n">locale</span><span class="o">.</span><span class="n">LC_ALL</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
 
 <span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
@@ -96,24 +109,29 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_response</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">+</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">))</span>
 </div>
-<div class="viewcode-block" id="Client.simple_transaction"><a class="viewcode-back" href="../../api/accounting.html#accounting.client.Client.simple_transaction">[docs]</a>    <span class="k">def</span> <span class="nf">simple_transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_acc</span><span class="p">,</span> <span class="n">to_acc</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+<div class="viewcode-block" id="Client.simple_transaction"><a class="viewcode-back" href="../../api/accounting.html#accounting.client.Client.simple_transaction">[docs]</a>    <span class="k">def</span> <span class="nf">simple_transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_acc</span><span class="p">,</span> <span class="n">to_acc</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">payee</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">symbol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># Get the currency from the environment locale</span>
+            <span class="n">symbol</span> <span class="o">=</span> <span class="n">locale</span><span class="o">.</span><span class="n">localeconv</span><span class="p">()[</span><span class="s">&#39;int_curr_symbol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
         <span class="n">t</span> <span class="o">=</span> <span class="n">Transaction</span><span class="p">(</span>
             <span class="n">date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span>
-            <span class="n">payee</span><span class="o">=</span><span class="s">&#39;PayPal donation&#39;</span><span class="p">,</span>
+            <span class="n">payee</span><span class="o">=</span><span class="n">payee</span><span class="p">,</span>
             <span class="n">postings</span><span class="o">=</span><span class="p">[</span>
                 <span class="n">Posting</span><span class="p">(</span><span class="n">account</span><span class="o">=</span><span class="n">from_acc</span><span class="p">,</span>
-                        <span class="n">amount</span><span class="o">=</span><span class="n">Amount</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s">&#39;$&#39;</span><span class="p">,</span> <span class="n">amount</span><span class="o">=-</span><span class="n">amount</span><span class="p">)),</span>
+                        <span class="n">amount</span><span class="o">=</span><span class="n">Amount</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">symbol</span><span class="p">,</span> <span class="n">amount</span><span class="o">=-</span><span class="n">amount</span><span class="p">)),</span>
                 <span class="n">Posting</span><span class="p">(</span><span class="n">account</span><span class="o">=</span><span class="n">to_acc</span><span class="p">,</span>
-                        <span class="n">amount</span><span class="o">=</span><span class="n">Amount</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s">&#39;$&#39;</span><span class="p">,</span> <span class="n">amount</span><span class="o">=</span><span class="n">amount</span><span class="p">))</span>
+                        <span class="n">amount</span><span class="o">=</span><span class="n">Amount</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">symbol</span><span class="p">,</span> <span class="n">amount</span><span class="o">=</span><span class="n">amount</span><span class="p">))</span>
             <span class="p">]</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s">&#39;/transaction&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;transactions&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="p">]})</span>
 </div>
 <div class="viewcode-block" id="Client.get_register"><a class="viewcode-back" href="../../api/accounting.html#accounting.client.Client.get_register">[docs]</a>    <span class="k">def</span> <span class="nf">get_register</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">register</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;/register&#39;</span><span class="p">)</span>
+        <span class="n">register</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;/transaction&#39;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">register</span><span class="p">[</span><span class="s">&#39;register_report&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">register</span><span class="p">[</span><span class="s">&#39;transactions&#39;</span><span class="p">]</span>
 
 </div></div>
 <div class="viewcode-block" id="print_transactions"><a class="viewcode-back" href="../../api/accounting.html#accounting.client.print_transactions">[docs]</a><span class="k">def</span> <span class="nf">print_transactions</span><span class="p">(</span><span class="n">transactions</span><span class="p">):</span>
@@ -124,19 +142,22 @@
 
         <span class="k">for</span> <span class="n">posting</span> <span class="ow">in</span> <span class="n">transaction</span><span class="o">.</span><span class="n">postings</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">posting</span><span class="o">.</span><span class="n">account</span> <span class="o">+</span>
-                <span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="mi">80</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">posting</span><span class="o">.</span><span class="n">account</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">posting</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span> <span class="o">-</span>
-                        <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">posting</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">amount</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span>
-                <span class="n">posting</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">symbol</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">posting</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">amount</span><span class="p">))</span>
+                  <span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="mi">80</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">posting</span><span class="o">.</span><span class="n">account</span><span class="p">)</span> <span class="o">-</span>
+                         <span class="nb">len</span><span class="p">(</span><span class="n">posting</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span> <span class="o">-</span>
+                         <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">posting</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">amount</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span>
+                  <span class="n">posting</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">symbol</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">posting</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">amount</span><span class="p">))</span>
 
 </div>
 <div class="viewcode-block" id="print_balance_accounts"><a class="viewcode-back" href="../../api/accounting.html#accounting.client.print_balance_accounts">[docs]</a><span class="k">def</span> <span class="nf">print_balance_accounts</span><span class="p">(</span><span class="n">accounts</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">account</span> <span class="ow">in</span> <span class="n">accounts</span><span class="p">:</span>
         <span class="k">print</span><span class="p">(</span><span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="n">level</span> <span class="o">+</span> <span class="s">&#39; + {account.name}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">account</span><span class="o">=</span><span class="n">account</span><span class="p">)</span> <span class="o">+</span>
               <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="s">&#39;-&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="mi">80</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">account</span><span class="o">.</span><span class="n">name</span><span class="p">))</span> <span class="o">-</span> <span class="n">level</span><span class="p">))</span>
+
         <span class="k">for</span> <span class="n">amount</span> <span class="ow">in</span> <span class="n">account</span><span class="o">.</span><span class="n">amounts</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="n">level</span> <span class="o">+</span> <span class="s">&#39;   {amount.symbol} {amount.amount}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">amount</span><span class="o">=</span><span class="n">amount</span><span class="p">))</span>
-        <span class="n">print_balance_accounts</span><span class="p">(</span><span class="n">account</span><span class="o">.</span><span class="n">accounts</span><span class="p">,</span> <span class="n">level</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">print_balance_accounts</span><span class="p">(</span><span class="n">account</span><span class="o">.</span><span class="n">accounts</span><span class="p">,</span> <span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
 </div>
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../api/accounting.html#accounting.client.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">prog</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -150,18 +171,25 @@
 
     <span class="n">insert</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s">&#39;insert&#39;</span><span class="p">,</span>
                                 <span class="n">aliases</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;in&#39;</span><span class="p">])</span>
+    <span class="n">insert</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;payee&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s">&#39;The payee line of the transaction&#39;</span><span class="p">)</span>
     <span class="n">insert</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;from_account&#39;</span><span class="p">)</span>
     <span class="n">insert</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;to_account&#39;</span><span class="p">)</span>
-    <span class="n">insert</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;amount&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">Decimal</span><span class="p">)</span>
+    <span class="n">insert</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;amount&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">Decimal</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s">&#39;The amount deducted from from_account and added&#39;</span>
+                             <span class="s">&#39; to to_account&#39;</span><span class="p">)</span>
+    <span class="n">insert</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-s&#39;</span><span class="p">,</span> <span class="s">&#39;--symbol&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s">&#39;The symbol for the amount, e.g. $ or USD for&#39;</span>
+                             <span class="s">&#39; USD. Defaults to your locale</span><span class="se">\&#39;</span><span class="s">s setting.&#39;</span><span class="p">)</span>
 
-    <span class="n">balance</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s">&#39;balance&#39;</span><span class="p">,</span> <span class="n">aliases</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;bal&#39;</span><span class="p">])</span>
+    <span class="n">actions</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s">&#39;balance&#39;</span><span class="p">,</span> <span class="n">aliases</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;bal&#39;</span><span class="p">])</span>
 
-    <span class="n">register</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s">&#39;register&#39;</span><span class="p">,</span> <span class="n">aliases</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;reg&#39;</span><span class="p">])</span>
+    <span class="n">actions</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s">&#39;register&#39;</span><span class="p">,</span> <span class="n">aliases</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;reg&#39;</span><span class="p">])</span>
 
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-v&#39;</span><span class="p">,</span> <span class="s">&#39;--verbosity&#39;</span><span class="p">,</span>
                         <span class="n">default</span><span class="o">=</span><span class="s">&#39;WARNING&#39;</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;Filter logging output. Possible values:&#39;</span> <span class="o">+</span>
-                        <span class="s">&#39; CRITICAL, ERROR, WARNING, INFO, DEBUG&#39;</span><span class="p">))</span>
+                              <span class="s">&#39; CRITICAL, ERROR, WARNING, INFO, DEBUG&#39;</span><span class="p">))</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--host&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;http://localhost:5000&#39;</span><span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
@@ -172,7 +200,8 @@
 
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;insert&#39;</span><span class="p">,</span> <span class="s">&#39;in&#39;</span><span class="p">]:</span>
         <span class="k">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">simple_transaction</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">from_account</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">to_account</span><span class="p">,</span>
-                                        <span class="n">args</span><span class="o">.</span><span class="n">amount</span><span class="p">))</span>
+                                        <span class="n">args</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span> <span class="n">payee</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">payee</span><span class="p">,</span>
+                                        <span class="n">symbol</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">symbol</span><span class="p">))</span>
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;balance&#39;</span><span class="p">,</span> <span class="s">&#39;bal&#39;</span><span class="p">]:</span>
         <span class="n">print_balance_accounts</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">get_balance</span><span class="p">())</span>
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;register&#39;</span><span class="p">,</span> <span class="s">&#39;reg&#39;</span><span class="p">]:</span>
@@ -189,6 +218,15 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/accounting-api-logo.png" alt="Logo"/>
+            </a></p><h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
@@ -206,26 +244,10 @@
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
-          <li><a href="../index.html" >Module code</a> &raquo;</li>
-          <li><a href="../accounting.html" >accounting</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2013, Joar Wandborg.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2013, Joar Wandborg.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  
   </body>
 </html>

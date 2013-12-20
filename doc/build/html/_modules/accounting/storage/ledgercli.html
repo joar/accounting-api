@@ -8,7 +8,7 @@
     
     <title>accounting.storage.ledgercli &mdash; Accounting API 0.1-beta documentation</title>
     
-    <link rel="stylesheet" href="../../../_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/flasky.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -24,9 +24,16 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="top" title="Accounting API 0.1-beta documentation" href="../../../index.html" />
-    <link rel="up" title="accounting.storage" href="../storage.html" /> 
+    <link rel="up" title="accounting.storage" href="../storage.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head>
   <body>
+  
+  
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -41,7 +48,6 @@
              >modules</a> |</li>
         <li><a href="../../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
-          <li><a href="../../accounting.html" >accounting</a> &raquo;</li>
           <li><a href="../storage.html" accesskey="U">accounting.storage</a> &raquo;</li> 
       </ul>
     </div>  
@@ -52,17 +58,23 @@
           <div class="body">
             
   <h1>Source code for accounting.storage.ledgercli</h1><div class="highlight"><pre>
+<span class="c"># Part of accounting-api project:</span>
+<span class="c"># https://gitorious.org/conservancy/accounting-api</span>
+<span class="c"># License: AGPLv3-or-later</span>
+
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">re</span>
 
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">xml.etree</span> <span class="kn">import</span> <span class="n">ElementTree</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
 
+<span class="kn">from</span> <span class="nn">accounting.exceptions</span> <span class="kn">import</span> <span class="n">AccountingException</span>
 <span class="kn">from</span> <span class="nn">accounting.models</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Transaction</span><span class="p">,</span> <span class="n">Posting</span><span class="p">,</span> <span class="n">Amount</span>
-<span class="kn">from</span> <span class="nn">accounting.storage</span> <span class="kn">import</span> <span class="n">Storage</span>
+<span class="kn">from</span> <span class="nn">accounting.storage</span> <span class="kn">import</span> <span class="n">Storage</span><span class="p">,</span> <span class="n">TransactionNotFound</span>
 
 <span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
@@ -215,11 +227,14 @@
 <span class="sd">        :class:`~accounting.models.Transaction` instance in</span>
 <span class="sd">        :data:`transaction`.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">transaction</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;Id&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">transaction</span><span class="o">.</span><span class="n">id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;No ID found. Generating an ID.&#39;</span><span class="p">)</span>
             <span class="n">transaction</span><span class="o">.</span><span class="n">generate_id</span><span class="p">()</span>
 
+        <span class="n">transaction</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;Id&#39;</span><span class="p">:</span> <span class="n">transaction</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+
         <span class="n">transaction_template</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">{date} {t.payee}</span><span class="se">\n</span><span class="s">&#39;</span>
-                                <span class="s">&#39;{tags}&#39;</span>
+                                <span class="s">&#39;{metadata}&#39;</span>
                                 <span class="s">&#39;{postings}&#39;</span><span class="p">)</span>
 
         <span class="n">metadata_template</span> <span class="o">=</span> <span class="s">&#39;   ;{0}: {1}</span><span class="se">\n</span><span class="s">&#39;</span>
@@ -235,7 +250,7 @@
         <span class="n">output</span> <span class="o">+=</span> <span class="n">transaction_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">date</span><span class="o">=</span><span class="n">transaction</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">),</span>
             <span class="n">t</span><span class="o">=</span><span class="n">transaction</span><span class="p">,</span>
-            <span class="n">tags</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
                 <span class="n">metadata_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">transaction</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">items</span><span class="p">()]),</span>
             <span class="n">postings</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">posting_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -251,6 +266,8 @@
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
 
         <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;written to file: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">transaction</span><span class="o">.</span><span class="n">id</span>
 </div>
 <div class="viewcode-block" id="Ledger.bal"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.bal">[docs]</a>    <span class="k">def</span> <span class="nf">bal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_command</span><span class="p">(</span><span class="s">&#39;xml&#39;</span><span class="p">)</span>
@@ -298,6 +315,16 @@
 
 <div class="viewcode-block" id="Ledger.get_transactions"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.get_transactions">[docs]</a>    <span class="k">def</span> <span class="nf">get_transactions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Ledger.get_transaction"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.get_transaction">[docs]</a>    <span class="k">def</span> <span class="nf">get_transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transaction_id</span><span class="p">):</span>
+        <span class="n">transactions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_transactions</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">transactions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">transaction</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">transaction_id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">transaction</span>
+
+        <span class="k">raise</span> <span class="n">TransactionNotFound</span><span class="p">(</span><span class="s">&#39;No transaction with id </span><span class="si">%s</span><span class="s"> found&#39;</span><span class="p">,</span>
+                                  <span class="n">transaction_id</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Ledger.reg"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.reg">[docs]</a>    <span class="k">def</span> <span class="nf">reg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_command</span><span class="p">(</span><span class="s">&#39;xml&#39;</span><span class="p">)</span>
@@ -354,15 +381,125 @@
                     <span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
 
             <span class="c"># Add a Transaction instance to the list</span>
-            <span class="nb">id</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;Id&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;Id&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">_log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;Transaction on </span><span class="si">%s</span><span class="s"> with payee </span><span class="si">%s</span><span class="s"> does not have an&#39;</span>
+                             <span class="s">&#39; Id attribute. A temporary ID will be used.&#39;</span><span class="p">,</span>
+                             <span class="n">date</span><span class="p">,</span> <span class="n">payee</span><span class="p">)</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="s">&#39;NO-ID&#39;</span>
             <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">Transaction</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">id</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="n">date</span><span class="p">,</span> <span class="n">payee</span><span class="o">=</span><span class="n">payee</span><span class="p">,</span> <span class="n">postings</span><span class="o">=</span><span class="n">postings</span><span class="p">,</span>
                             <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">entries</span>
 </div>
+<div class="viewcode-block" id="Ledger.delete_transaction"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.delete_transaction">[docs]</a>    <span class="k">def</span> <span class="nf">delete_transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transaction_id</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Delete a transaction from the ledger file.</span>
+
+<span class="sd">        This method opens the ledger file, loads all lines into memory and</span>
+<span class="sd">        looks for the transaction_id, then looks for the bounds of that</span>
+<span class="sd">        transaction in the ledger file, removes all lines within the bounds of</span>
+<span class="sd">        the transaction and removes them, then writes the lines back to the</span>
+<span class="sd">        ledger file.</span>
+
+<span class="sd">        Exceptions:</span>
+
+<span class="sd">        -   RuntimeError: If all boundaries to the transaction are not found</span>
+<span class="sd">        -   TransactionNotFound: If no such transaction_id can be found in</span>
+<span class="sd">            :data:`self.ledger_file`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ledger_file</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+
+        <span class="c"># A mapping of line meanings and their line numbers as found by the</span>
+        <span class="c"># following logic</span>
+        <span class="n">semantic_lines</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">id_location</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">transaction_start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">next_transaction_or_eof</span><span class="o">=</span><span class="bp">None</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">transaction_id</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;id_location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;id_location&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">TransactionNotFound</span><span class="p">(</span>
+                <span class="s">&#39;No transaction with ID &quot;{0}&quot; found&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">))</span>
+
+        <span class="n">transaction_start_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;^\S&#39;</span><span class="p">)</span>
+
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;id_location&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="c"># Find the first line of the transaction</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">transaction_start_pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">cursor</span><span class="p">]):</span>
+                <span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;transaction_start&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cursor</span>
+                <span class="k">break</span>
+
+            <span class="n">cursor</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;id_location&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c"># Find the last line of the transaction</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">transaction_start_pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">cursor</span><span class="p">]):</span>
+                    <span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;next_transaction_or_eof&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cursor</span>
+                    <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="c"># Set next_line_without_starting_space_or_end_of_file to</span>
+                <span class="c"># the cursor. The cursor will be an index not included in the</span>
+                <span class="c"># list of lines</span>
+                <span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;next_transaction_or_eof&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cursor</span>
+                <span class="k">break</span>
+
+            <span class="n">cursor</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">,</span> <span class="n">semantic_lines</span><span class="o">.</span><span class="n">values</span><span class="p">())):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;Could not find all the values necessary for&#39;</span>
+                               <span class="s">&#39; safe deletion of a transaction.&#39;</span><span class="p">)</span>
+
+        <span class="n">del_start</span> <span class="o">=</span> <span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;transaction_start&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">==</span> <span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;next_transaction_or_eof&#39;</span><span class="p">]:</span>
+            <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;There are no transactions below the transaction being&#39;</span>
+                       <span class="s">&#39; deleted. The line before the first line of the&#39;</span>
+                       <span class="s">&#39; transaction will be deleted.&#39;</span><span class="p">)</span>
+            <span class="c"># Delete the preceding line to make the file</span>
+            <span class="n">del_start</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">del</span> <span class="n">lines</span><span class="p">[</span><span class="n">del_start</span><span class="p">:</span><span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;next_transaction_or_eof&#39;</span><span class="p">]]</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ledger_file</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</div>
 <div class="viewcode-block" id="Ledger.update_transaction"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.update_transaction">[docs]</a>    <span class="k">def</span> <span class="nf">update_transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transaction</span><span class="p">):</span>
-        <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;DUMMY: Updated transaction: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">transaction</span><span class="p">)</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Update a transaction in the ledger file.</span>
+
+<span class="sd">        Takes a :class:`~accounting.models.Transaction` object and removes</span>
+<span class="sd">        the old transaction using :data:`transaction.id` from the passed</span>
+<span class="sd">        :class:`~accounting.models.Transaction` instance and adds</span>
+<span class="sd">        :data:`transaction` to the database.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">transaction</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AccountingException</span><span class="p">((</span><span class="s">&#39;The transaction {0} has no&#39;</span>
+                                        <span class="s">&#39; id attribute&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">transaction</span><span class="p">))</span>
+
+        <span class="n">old_transaction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_transaction</span><span class="p">(</span><span class="n">transaction</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_transaction</span><span class="p">(</span><span class="n">transaction</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_transaction</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
+
+        <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Updated transaction from: </span><span class="si">%s</span><span class="s"> to: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">old_transaction</span><span class="p">,</span>
+                   <span class="n">transaction</span><span class="p">)</span>
 
 </div></div>
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -392,6 +529,17 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/accounting-api-logo.png" alt="Logo"/>
+            </a></p><h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../storage.html">accounting.storage</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../../search.html" method="get">
@@ -409,27 +557,10 @@
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../../../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
-          <a href="../../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li><a href="../../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
-          <li><a href="../../index.html" >Module code</a> &raquo;</li>
-          <li><a href="../../accounting.html" >accounting</a> &raquo;</li>
-          <li><a href="../storage.html" >accounting.storage</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2013, Joar Wandborg.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2013, Joar Wandborg.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  
   </body>
 </html>

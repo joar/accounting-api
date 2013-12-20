@@ -8,7 +8,7 @@
     
     <title>accounting.decorators &mdash; Accounting API 0.1-beta documentation</title>
     
-    <link rel="stylesheet" href="../../_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/flasky.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -24,9 +24,16 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="top" title="Accounting API 0.1-beta documentation" href="../../index.html" />
-    <link rel="up" title="accounting" href="../accounting.html" /> 
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head>
   <body>
+  
+  
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -40,8 +47,7 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
-          <li><a href="../index.html" >Module code</a> &raquo;</li>
-          <li><a href="../accounting.html" accesskey="U">accounting</a> &raquo;</li> 
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -51,9 +57,13 @@
           <div class="body">
             
   <h1>Source code for accounting.decorators</h1><div class="highlight"><pre>
+<span class="c"># Part of accounting-api project:</span>
+<span class="c"># https://gitorious.org/conservancy/accounting-api</span>
+<span class="c"># License: AGPLv3-or-later</span>
+
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
 
-<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">jsonify</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">request</span>
 
 <span class="kn">from</span> <span class="nn">accounting.exceptions</span> <span class="kn">import</span> <span class="n">AccountingException</span>
 
@@ -70,7 +80,69 @@
         <span class="k">except</span> <span class="n">AccountingException</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">error</span><span class="o">=</span><span class="n">exc</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">wrapper</span></div>
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+</div>
+<div class="viewcode-block" id="cors"><a class="viewcode-back" href="../../api/accounting.html#accounting.decorators.cors">[docs]</a><span class="k">def</span> <span class="nf">cors</span><span class="p">(</span><span class="n">origin_callback</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Flask endpoint decorator.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        @app.route(&#39;/cors-endpoint&#39;, methods=[&#39;GET&#39;, &#39;OPTIONS&#39;])</span>
+<span class="sd">        @cors()</span>
+<span class="sd">        def cors_endpoint():</span>
+<span class="sd">            return jsonify(message=&#39;This is accessible via a cross-origin XHR&#39;)</span>
+
+<span class="sd">        # Or if you want to control the domains this resource can be requested</span>
+<span class="sd">        # from via CORS:</span>
+<span class="sd">        domains = [&#39;http://wandborg.se&#39;, &#39;http://sfconservancy.org&#39;]</span>
+
+<span class="sd">        def restrict_domains(origin):</span>
+<span class="sd">            return &#39; &#39;.join(domains)</span>
+
+<span class="sd">        @app.route(&#39;/restricted-cors-endpoint&#39;)</span>
+<span class="sd">        @cors(restrict_domains)</span>
+<span class="sd">        def restricted_cors_endpoint():</span>
+<span class="sd">            return jsonify(</span>
+<span class="sd">                message=&#39;This is accessible from %s&#39; % &#39;, &#39;.join(domains))</span>
+
+<span class="sd">    :param function origin_callback: A callback that takes one str() argument</span>
+<span class="sd">        containing the ``Origin`` HTTP header from the :data:`request` object.</span>
+<span class="sd">        This can be used to filter out which domains the resource can be</span>
+<span class="sd">        requested via CORS from.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">origin_callback</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">origin_callback</span> <span class="o">=</span> <span class="n">allow_all_origins</span>
+
+    <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+            <span class="n">cors_headers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&#39;Access-Control-Allow-Origin&#39;</span><span class="p">:</span>
+                    <span class="n">origin_callback</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;Origin&#39;</span><span class="p">))</span> <span class="ow">or</span> <span class="s">&#39;*&#39;</span><span class="p">,</span>
+                <span class="s">&#39;Access-Control-Allow-Credentials&#39;</span><span class="p">:</span> <span class="s">&#39;true&#39;</span><span class="p">,</span>
+                <span class="s">&#39;Access-Control-Max-Age&#39;</span><span class="p">:</span> <span class="mi">3600</span><span class="p">,</span>
+                <span class="s">&#39;Access-Control-Allow-Methods&#39;</span><span class="p">:</span> <span class="s">&#39;POST, GET, DELETE&#39;</span><span class="p">,</span>
+                <span class="s">&#39;Access-Control-Allow-Headers&#39;</span><span class="p">:</span>
+                    <span class="s">&#39;Accept, Content-Type, Connection, Cookie&#39;</span>
+            <span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">cors_headers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+            <span class="k">return</span> <span class="n">response</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="k">return</span> <span class="n">decorator</span>
+
+</div>
+<div class="viewcode-block" id="allow_all_origins"><a class="viewcode-back" href="../../api/accounting.html#accounting.decorators.allow_all_origins">[docs]</a><span class="k">def</span> <span class="nf">allow_all_origins</span><span class="p">(</span><span class="n">origin</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">origin</span></div>
 </pre></div>
 
           </div>
@@ -78,6 +150,15 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/accounting-api-logo.png" alt="Logo"/>
+            </a></p><h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
@@ -95,26 +176,10 @@
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
-          <li><a href="../index.html" >Module code</a> &raquo;</li>
-          <li><a href="../accounting.html" >accounting</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2013, Joar Wandborg.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2013, Joar Wandborg.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  
   </body>
 </html>

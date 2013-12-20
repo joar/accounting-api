@@ -9,7 +9,7 @@
     
     <title>Index &mdash; Accounting API 0.1-beta documentation</title>
     
-    <link rel="stylesheet" href="_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -24,9 +24,16 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Accounting API 0.1-beta documentation" href="index.html" /> 
+    <link rel="top" title="Accounting API 0.1-beta documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head>
   <body>
+  
+  
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -165,6 +172,10 @@
 
       </dl></dd>
       
+  <dt><a href="api/accounting.html#accounting.decorators.allow_all_origins">allow_all_origins() (in module accounting.decorators)</a>
+  </dt>
+
+      
   <dt><a href="api/accounting.storage.sql.html#accounting.storage.sql.models.Amount.amount">amount (accounting.storage.sql.models.Amount attribute)</a>
   </dt>
 
@@ -224,6 +235,16 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api/accounting.html#accounting.client.Client">Client (class in accounting.client)</a>
+  </dt>
+
+      
+  <dt><a href="api/accounting.html#accounting.web.client">client() (in module accounting.web)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/accounting.html#accounting.decorators.cors">cors() (in module accounting.decorators)</a>
   </dt>
 
   </dl></td>
@@ -439,11 +460,15 @@
   </dt>
 
       
-  <dt><a href="api/accounting.html#accounting.gtkclient.AccountingApplication.on_transaction_refresh_activate">on_transaction_refresh_activate() (accounting.gtkclient.AccountingApplication method)</a>
+  <dt><a href="api/accounting.html#accounting.gtkclient.AccountingApplication.on_transaction_new_activate">on_transaction_new_activate() (accounting.gtkclient.AccountingApplication method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/accounting.html#accounting.gtkclient.AccountingApplication.on_transaction_refresh_activate">on_transaction_refresh_activate() (accounting.gtkclient.AccountingApplication method)</a>
+  </dt>
+
       
   <dt><a href="api/accounting.html#accounting.gtkclient.AccountingApplication.on_transaction_view_cursor_changed">on_transaction_view_cursor_changed() (accounting.gtkclient.AccountingApplication method)</a>
   </dt>
@@ -555,6 +580,10 @@
 
       </dl></dd>
       
+  <dt><a href="api/accounting.html#accounting.web.transaction_by_id_options">transaction_by_id_options() (in module accounting.web)</a>
+  </dt>
+
+      
   <dt><a href="api/accounting.html#accounting.web.transaction_delete">transaction_delete() (in module accounting.web)</a>
   </dt>
 
@@ -564,6 +593,10 @@
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/accounting.html#accounting.web.transaction_options">transaction_options() (in module accounting.web)</a>
+  </dt>
+
       
   <dt><a href="api/accounting.html#accounting.web.transaction_post">transaction_post() (in module accounting.web)</a>
   </dt>
@@ -616,8 +649,15 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/accounting-api-logo.png" alt="Logo"/>
+            </a></p>
 
-   
+   <h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
 
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
@@ -636,24 +676,10 @@
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="#" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li><a href="index.html">Accounting API 0.1-beta documentation</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2013, Joar Wandborg.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2013, Joar Wandborg.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  
   </body>
 </html>

@@ -8,7 +8,7 @@
     
     <title>accounting.storage package &mdash; Accounting API 0.1-beta documentation</title>
     
-    <link rel="stylesheet" href="../_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/flasky.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -24,11 +24,15 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="Accounting API 0.1-beta documentation" href="../index.html" />
-    <link rel="up" title="accounting package" href="accounting.html" />
-    <link rel="next" title="accounting.storage.sql package" href="accounting.storage.sql.html" />
-    <link rel="prev" title="accounting package" href="accounting.html" /> 
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head>
   <body>
+  
+  
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -36,19 +40,12 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="../http-routingtable.html" title="HTTP Routing Table"
              >routing table</a> |</li>
         <li class="right" >
-          <a href="accounting.storage.sql.html" title="accounting.storage.sql package"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="accounting.html" title="accounting package"
-             accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
-          <li><a href="accounting.html" accesskey="U">accounting package</a> &raquo;</li> 
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -104,7 +101,7 @@ based on <tt class="xref py py-attr docutils literal"><span class="pre">self.led
 
 <dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.delete_transaction">
-<tt class="descname">delete_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.delete_transaction" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">delete_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.delete_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.delete_transaction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete a transaction from the ledger file.</p>
 <p>This method opens the ledger file, loads all lines into memory and
 looks for the transaction_id, then looks for the bounds of that
@@ -129,7 +126,7 @@ ledger file.</p>
 
 <dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.get_transaction">
-<tt class="descname">get_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.get_transaction" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.get_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.get_transaction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -207,12 +204,12 @@ the old transaction using <tt class="xref py py-data docutils literal"><span cla
 <p>ABC for accounting storage</p>
 <dl class="method">
 <dt id="accounting.storage.Storage.add_transaction">
-<tt class="descname">add_transaction</tt><big>(</big><em>transaction</em><big>)</big><a class="headerlink" href="#accounting.storage.Storage.add_transaction" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">add_transaction</tt><big>(</big><em>transaction</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage.html#Storage.add_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.Storage.add_transaction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="accounting.storage.Storage.delete_transaction">
-<tt class="descname">delete_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="headerlink" href="#accounting.storage.Storage.delete_transaction" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">delete_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage.html#Storage.delete_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.Storage.delete_transaction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -237,19 +234,19 @@ the old transaction using <tt class="xref py py-data docutils literal"><span cla
 
 <dl class="method">
 <dt id="accounting.storage.Storage.reverse_transaction">
-<tt class="descname">reverse_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="headerlink" href="#accounting.storage.Storage.reverse_transaction" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">reverse_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage.html#Storage.reverse_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.Storage.reverse_transaction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="accounting.storage.Storage.update_transaction">
-<tt class="descname">update_transaction</tt><big>(</big><em>transaction</em><big>)</big><a class="headerlink" href="#accounting.storage.Storage.update_transaction" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">update_transaction</tt><big>(</big><em>transaction</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage.html#Storage.update_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.Storage.update_transaction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="exception">
 <dt id="accounting.storage.TransactionNotFound">
-<em class="property">exception </em><tt class="descclassname">accounting.storage.</tt><tt class="descname">TransactionNotFound</tt><a class="headerlink" href="#accounting.storage.TransactionNotFound" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descclassname">accounting.storage.</tt><tt class="descname">TransactionNotFound</tt><a class="reference internal" href="../_modules/accounting/storage.html#TransactionNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.TransactionNotFound" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="accounting.html#accounting.exceptions.AccountingException" title="accounting.exceptions.AccountingException"><tt class="xref py py-class docutils literal"><span class="pre">accounting.exceptions.AccountingException</span></tt></a></p>
 </dd></dl>
 
@@ -262,6 +259,9 @@ the old transaction using <tt class="xref py py-data docutils literal"><span cla
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/accounting-api-logo.png" alt="Logo"/>
+            </a></p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">accounting.storage package</a><ul>
@@ -274,13 +274,11 @@ the old transaction using <tt class="xref py py-data docutils literal"><span cla
 </ul>
 </li>
 </ul>
-
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="accounting.html"
-                        title="previous chapter">accounting package</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="accounting.storage.sql.html"
-                        title="next chapter">accounting.storage.sql package</a></p>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/api/accounting.storage.txt"
@@ -303,31 +301,10 @@ the old transaction using <tt class="xref py py-data docutils literal"><span cla
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
-          <a href="accounting.storage.sql.html" title="accounting.storage.sql package"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="accounting.html" title="accounting package"
-             >previous</a> |</li>
-        <li><a href="../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
-          <li><a href="accounting.html" >accounting package</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2013, Joar Wandborg.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2013, Joar Wandborg.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  
   </body>
 </html>

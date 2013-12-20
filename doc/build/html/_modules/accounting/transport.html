@@ -8,7 +8,7 @@
     
     <title>accounting.transport &mdash; Accounting API 0.1-beta documentation</title>
     
-    <link rel="stylesheet" href="../../_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/flasky.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -24,9 +24,16 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="top" title="Accounting API 0.1-beta documentation" href="../../index.html" />
-    <link rel="up" title="accounting" href="../accounting.html" /> 
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head>
   <body>
+  
+  
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -40,8 +47,7 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
-          <li><a href="../index.html" >Module code</a> &raquo;</li>
-          <li><a href="../accounting.html" accesskey="U">accounting</a> &raquo;</li> 
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -51,11 +57,16 @@
           <div class="body">
             
   <h1>Source code for accounting.transport</h1><div class="highlight"><pre>
+<span class="c"># Part of accounting-api project:</span>
+<span class="c"># https://gitorious.org/conservancy/accounting-api</span>
+<span class="c"># License: AGPLv3-or-later</span>
+
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 
 <span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">json</span>
 
 <span class="kn">from</span> <span class="nn">accounting.models</span> <span class="kn">import</span> <span class="n">Amount</span><span class="p">,</span> <span class="n">Transaction</span><span class="p">,</span> <span class="n">Posting</span><span class="p">,</span> <span class="n">Account</span>
+
 
 <div class="viewcode-block" id="AccountingEncoder"><a class="viewcode-back" href="../../api/accounting.html#accounting.transport.AccountingEncoder">[docs]</a><span class="k">class</span> <span class="nc">AccountingEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
 <div class="viewcode-block" id="AccountingEncoder.default"><a class="viewcode-back" href="../../api/accounting.html#accounting.transport.AccountingEncoder.default">[docs]</a>    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
@@ -69,6 +80,7 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Transaction</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
                 <span class="n">__type__</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                 <span class="n">date</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">),</span>
                 <span class="n">payee</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">payee</span><span class="p">,</span>
                 <span class="n">postings</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">postings</span><span class="p">,</span>
@@ -94,6 +106,7 @@
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
+
 </div></div>
 <div class="viewcode-block" id="AccountingDecoder"><a class="viewcode-back" href="../../api/accounting.html#accounting.transport.AccountingDecoder">[docs]</a><span class="k">class</span> <span class="nc">AccountingDecoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecoder</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -103,8 +116,8 @@
         <span class="k">if</span> <span class="s">&#39;__type__&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">d</span>
 
-        <span class="n">types</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">__name__</span> <span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Amount</span><span class="p">,</span> <span class="n">Transaction</span><span class="p">,</span> <span class="n">Posting</span><span class="p">,</span>
-                                          <span class="n">Account</span><span class="p">]}</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">__name__</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Amount</span><span class="p">,</span> <span class="n">Transaction</span><span class="p">,</span> <span class="n">Posting</span><span class="p">,</span>
+                                         <span class="n">Account</span><span class="p">]}</span>
 
         <span class="n">_type</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;__type__&#39;</span><span class="p">)</span>
 
@@ -119,6 +132,15 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/accounting-api-logo.png" alt="Logo"/>
+            </a></p><h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
@@ -136,26 +158,10 @@
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
-          <li><a href="../index.html" >Module code</a> &raquo;</li>
-          <li><a href="../accounting.html" >accounting</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2013, Joar Wandborg.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2013, Joar Wandborg.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  
   </body>
 </html>

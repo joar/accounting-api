@@ -8,7 +8,7 @@
     
     <title>accounting package &mdash; Accounting API 0.1-beta documentation</title>
     
-    <link rel="stylesheet" href="../_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/flasky.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -24,10 +24,15 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="Accounting API 0.1-beta documentation" href="../index.html" />
-    <link rel="next" title="accounting.storage package" href="accounting.storage.html" />
-    <link rel="prev" title="REST API" href="../restapi.html" /> 
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head>
   <body>
+  
+  
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -35,17 +40,11 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="../http-routingtable.html" title="HTTP Routing Table"
              >routing table</a> |</li>
         <li class="right" >
-          <a href="accounting.storage.html" title="accounting.storage package"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="../restapi.html" title="REST API"
-             accesskey="P">previous</a> |</li>
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li><a href="../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -137,6 +136,48 @@
 <div class="section" id="module-accounting.decorators">
 <span id="accounting-decorators-module"></span><h2>accounting.decorators module<a class="headerlink" href="#module-accounting.decorators" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
+<dt id="accounting.decorators.allow_all_origins">
+<tt class="descclassname">accounting.decorators.</tt><tt class="descname">allow_all_origins</tt><big>(</big><em>origin</em><big>)</big><a class="reference internal" href="../_modules/accounting/decorators.html#allow_all_origins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.decorators.allow_all_origins" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="accounting.decorators.cors">
+<tt class="descclassname">accounting.decorators.</tt><tt class="descname">cors</tt><big>(</big><em>origin_callback=None</em><big>)</big><a class="reference internal" href="../_modules/accounting/decorators.html#cors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.decorators.cors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flask endpoint decorator.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/cors-endpoint&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="s">&#39;OPTIONS&#39;</span><span class="p">])</span>
+<span class="nd">@cors</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">cors_endpoint</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s">&#39;This is accessible via a cross-origin XHR&#39;</span><span class="p">)</span>
+
+<span class="c"># Or if you want to control the domains this resource can be requested</span>
+<span class="c"># from via CORS:</span>
+<span class="n">domains</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;http://wandborg.se&#39;</span><span class="p">,</span> <span class="s">&#39;http://sfconservancy.org&#39;</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">restrict_domains</span><span class="p">(</span><span class="n">origin</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">domains</span><span class="p">)</span>
+
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/restricted-cors-endpoint&#39;</span><span class="p">)</span>
+<span class="nd">@cors</span><span class="p">(</span><span class="n">restrict_domains</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">restricted_cors_endpoint</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span>
+        <span class="n">message</span><span class="o">=</span><span class="s">&#39;This is accessible from </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">domains</span><span class="p">))</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>origin_callback</strong> (<em>function</em>) &#8211; A callback that takes one str() argument
+containing the <tt class="docutils literal"><span class="pre">Origin</span></tt> HTTP header from the <tt class="xref py py-data docutils literal"><span class="pre">request</span></tt> object.
+This can be used to filter out which domains the resource can be
+requested via CORS from.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="accounting.decorators.jsonify_exceptions">
 <tt class="descclassname">accounting.decorators.</tt><tt class="descname">jsonify_exceptions</tt><big>(</big><em>func</em><big>)</big><a class="reference internal" href="../_modules/accounting/decorators.html#jsonify_exceptions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.decorators.jsonify_exceptions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wraps a Flask endpoint and catches any AccountingException-based
@@ -168,7 +209,7 @@ jsonify_exceptions decorator</p>
 
 <dl class="method">
 <dt id="accounting.gtkclient.AccountingApplication.on_about_dialog_response">
-<tt class="descname">on_about_dialog_response</tt><big>(</big><em>widget</em>, <em>response_type</em><big>)</big><a class="headerlink" href="#accounting.gtkclient.AccountingApplication.on_about_dialog_response" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_about_dialog_response</tt><big>(</big><em>widget</em>, <em>response_type</em><big>)</big><a class="reference internal" href="../_modules/accounting/gtkclient.html#AccountingApplication.on_about_dialog_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.gtkclient.AccountingApplication.on_about_dialog_response" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -177,13 +218,18 @@ jsonify_exceptions decorator</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="accounting.gtkclient.AccountingApplication.on_transaction_new_activate">
+<tt class="descname">on_transaction_new_activate</tt><big>(</big><em>widget</em><big>)</big><a class="reference internal" href="../_modules/accounting/gtkclient.html#AccountingApplication.on_transaction_new_activate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.gtkclient.AccountingApplication.on_transaction_new_activate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="accounting.gtkclient.AccountingApplication.on_transaction_refresh_activate">
-<tt class="descname">on_transaction_refresh_activate</tt><big>(</big><em>widget</em><big>)</big><a class="headerlink" href="#accounting.gtkclient.AccountingApplication.on_transaction_refresh_activate" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_transaction_refresh_activate</tt><big>(</big><em>widget</em><big>)</big><a class="reference internal" href="../_modules/accounting/gtkclient.html#AccountingApplication.on_transaction_refresh_activate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.gtkclient.AccountingApplication.on_transaction_refresh_activate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="accounting.gtkclient.AccountingApplication.on_transaction_view_cursor_changed">
-<tt class="descname">on_transaction_view_cursor_changed</tt><big>(</big><em>widget</em><big>)</big><a class="headerlink" href="#accounting.gtkclient.AccountingApplication.on_transaction_view_cursor_changed" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_transaction_view_cursor_changed</tt><big>(</big><em>widget</em><big>)</big><a class="reference internal" href="../_modules/accounting/gtkclient.html#AccountingApplication.on_transaction_view_cursor_changed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.gtkclient.AccountingApplication.on_transaction_view_cursor_changed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -271,6 +317,11 @@ jsonify_exceptions decorator</p>
 <p>This module contains the high-level webservice logic such as the Flask setup
 and the Flask endpoints.</p>
 <dl class="function">
+<dt id="accounting.web.client">
+<tt class="descclassname">accounting.web.</tt><tt class="descname">client</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/web.html#client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.web.client" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="accounting.web.index">
 <tt class="descclassname">accounting.web.</tt><tt class="descname">index</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/web.html#index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.web.index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hello World!</p>
@@ -289,15 +340,25 @@ and the Flask endpoints.</p>
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="accounting.web.transaction_by_id_options">
+<tt class="descclassname">accounting.web.</tt><tt class="descname">transaction_by_id_options</tt><big>(</big><em>transaction_id=None</em><big>)</big><a class="reference internal" href="../_modules/accounting/web.html#transaction_by_id_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.web.transaction_by_id_options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="accounting.web.transaction_delete">
-<tt class="descclassname">accounting.web.</tt><tt class="descname">transaction_delete</tt><big>(</big><em>transaction_id=None</em><big>)</big><a class="headerlink" href="#accounting.web.transaction_delete" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">accounting.web.</tt><tt class="descname">transaction_delete</tt><big>(</big><em>transaction_id=None</em><big>)</big><a class="reference internal" href="../_modules/accounting/web.html#transaction_delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.web.transaction_delete" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="accounting.web.transaction_get">
-<tt class="descclassname">accounting.web.</tt><tt class="descname">transaction_get</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/web.html#transaction_get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.web.transaction_get" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">accounting.web.</tt><tt class="descname">transaction_get</tt><big>(</big><em>transaction_id=None</em><big>)</big><a class="reference internal" href="../_modules/accounting/web.html#transaction_get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.web.transaction_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the JSON-serialized output of <tt class="xref py py-meth docutils literal"><span class="pre">accounting.Ledger.reg()</span></tt></p>
 </dd></dl>
+
+<dl class="function">
+<dt id="accounting.web.transaction_options">
+<tt class="descclassname">accounting.web.</tt><tt class="descname">transaction_options</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/web.html#transaction_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.web.transaction_options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="accounting.web.transaction_post">
@@ -345,7 +406,7 @@ the ledger file.</p>
 
 <dl class="function">
 <dt id="accounting.web.transaction_update">
-<tt class="descclassname">accounting.web.</tt><tt class="descname">transaction_update</tt><big>(</big><em>transaction_id=None</em><big>)</big><a class="headerlink" href="#accounting.web.transaction_update" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">accounting.web.</tt><tt class="descname">transaction_update</tt><big>(</big><em>transaction_id=None</em><big>)</big><a class="reference internal" href="../_modules/accounting/web.html#transaction_update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.web.transaction_update" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -360,6 +421,9 @@ the ledger file.</p>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/accounting-api-logo.png" alt="Logo"/>
+            </a></p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">accounting package</a><ul>
@@ -379,13 +443,11 @@ the ledger file.</p>
 </ul>
 </li>
 </ul>
-
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="../restapi.html"
-                        title="previous chapter">REST API</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="accounting.storage.html"
-                        title="next chapter">accounting.storage package</a></p>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/api/accounting.txt"
@@ -408,30 +470,10 @@ the ledger file.</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
-          <a href="accounting.storage.html" title="accounting.storage package"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="../restapi.html" title="REST API"
-             >previous</a> |</li>
-        <li><a href="../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2013, Joar Wandborg.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2013, Joar Wandborg.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  
   </body>
 </html>

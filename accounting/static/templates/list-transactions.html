@@ -1,0 +1,24 @@
+<div class="row">
+    <div class="span12">
+        <h1>Transactions</h1>
+        <table class="table striped">
+            <tr>
+                <th>Date</th>
+                <th>Payee</th>
+                <th>Postings</th>
+            </tr>
+            <tr ng-repeat="transaction in request.transactions">
+                <td>{{ transaction.date }}</td>
+                <td><a href="#/show/{{ transaction.id }}">
+                        {{ transaction.payee }}</a></td>
+                <td>
+                    <li ng-repeat="posting in transaction.postings">
+                    {{ posting.account }} {{ posting.amount.amount }}
+                    {{ posting.amount.symbol }}
+                    </li>
+                </td>
+            </tr>
+        </table>
+        <a class="btn btn-primary" href="#/new">Add transaction</a>
+    </div>
+</div>

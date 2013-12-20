@@ -1,0 +1,29 @@
+<!doctype html>
+<html ng-app="accountingClient">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+        <script src="/static/js/lib/angular-1.2.5.js"></script>
+        <script src="/static/js/lib/angular-route-1.2.5.js"></script>
+        <script src="/static/js/lib/angular-resource-1.2.5.js"></script>
+        <script src="/static/js/lib/jquery-1.10.2.js"></script>
+        <script src="/static/js/lib/bootstrap-3.0.3.js"></script>
+        <script src="/static/js/accounting.js"></script>
+        <script src="/static/js/client.js"></script>
+
+        <link rel="stylesheet" href="/static/css/lib/bootstrap-3.0.3.css" />
+    </head>
+    <body>
+        <div class="container" ng-view>
+        </div>
+        <hr />
+        <footer class="container">
+            <div class="row">
+                <div class="span12">
+                    Accounting Client from the
+                    <a href="https://gitorious.org/conservancy/accounting-api">
+                        Accounting API</a> project.
+                </div>
+            </div>
+        </footer>
+    </body>
+</html>

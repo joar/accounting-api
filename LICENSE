@@ -46,6 +46,19 @@ are from the python 3 sphinx documentation source code and are licensed under
 the PSF. For the full license, see the file PSF-PY3.3-LICENSE.
 
 
+Bootstrap, AngularJS and jQuery
+-------------------------------
+
+These JavaScript libraries are used by the 'Accounting Client' included in this
+project. The libraries are located in
+
+    accounting/static/js/lib/*
+    accounting/static/css/lib/*
+
+(asterisk '*' indicates wildcard substitution) and the first lines of each file
+include the license information for each file.
+
+
 Copyright Inventory
 ===================
 

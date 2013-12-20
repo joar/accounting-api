@@ -1,0 +1,26 @@
+<div class="row">
+    <div class="span12">
+        <h1>Transaction {{ transaction.id }}</h1>
+        <h2>{{ transaction.payee }} - {{ transaction.date }}</h2>
+        <h3>Postings</h3>
+        <table class="table striped">
+            <tr>
+                <th>Account</th>
+                <th>Amount</th>
+            </tr>
+            <tr ng-repeat="posting in transaction.postings">
+                <td>{{ posting.account }}</td>
+                <td>{{ posting.amount.amount }} {{ posting.amount.symbol }}</td>
+            </tr>
+        </table>
+        <div ng-hide="transaction.metadata == {}">
+            <h3>Metadata</h3>
+            <dl class="dl-horizontal">
+                <dt ng-repeat-start="(key, value) in transaction.metadata">
+                    {{ key }}
+                </dt>
+                <dd ng-repeat-end>{{ value }}</dd>
+            </dl>
+        </div>
+    </div>
+</div>

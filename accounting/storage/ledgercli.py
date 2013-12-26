@@ -211,6 +211,8 @@ class Ledger(Storage):
         with open(self.ledger_file, 'ab') as f:
             f.write(output)
 
+        _log.info('Added transaction %s', transaction.id)
+
         _log.debug('written to file: %s', output)
 
         return transaction.id
@@ -419,6 +421,11 @@ class Ledger(Storage):
             # Delete the preceding line to make the file
             del_start -= 1
 
+        _log.info('Removing transaction with ID: %s (lines %d-%d)',
+                   transaction_id,
+                   del_start,
+                   semantic_lines['next_transaction_or_eof'])
+
         del lines[del_start:semantic_lines['next_transaction_or_eof']]
 
         with open(self.ledger_file, 'w') as f:
@@ -444,6 +451,7 @@ class Ledger(Storage):
 
         self.add_transaction(transaction)
 
+        _log.info('Updated transaction %s', transaction.id)
         _log.debug('Updated transaction from: %s to: %s', old_transaction,
                    transaction)
 

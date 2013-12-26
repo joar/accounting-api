@@ -40,11 +40,11 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
         <li><a href="../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -89,7 +89,7 @@ writing a ledger transaction based on the
 
 <dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.assemble_arguments">
-<tt class="descname">assemble_arguments</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.assemble_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.assemble_arguments" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">assemble_arguments</tt><big>(</big><em>command=None</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.assemble_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.assemble_arguments" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list of arguments suitable for <a class="reference external" href="http://docs.python.org/3.3/library/subprocess.html#subprocess.Popen" title="(in Python v3.3)"><tt class="xref py py-class docutils literal"><span class="pre">subprocess.Popen</span></tt></a>
 based on <tt class="xref py py-attr docutils literal"><span class="pre">self.ledger_bin</span></tt> and <tt class="xref py py-attr docutils literal"><span class="pre">self.ledger_file</span></tt>.</p>
 </dd></dl>
@@ -98,6 +98,12 @@ based on <tt class="xref py py-attr docutils literal"><span class="pre">self.led
 <dt id="accounting.storage.ledgercli.Ledger.bal">
 <tt class="descname">bal</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.bal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.bal" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt id="accounting.storage.ledgercli.Ledger.commit_changes">
+<tt class="descname">commit_changes</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.commit_changes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commits any changes to <tt class="xref py py-attr docutils literal"><span class="pre">self.ledger_file</span></tt> to the git repository</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.delete_transaction">
@@ -117,14 +123,6 @@ ledger file.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="accounting.storage.ledgercli.Ledger.get_process">
-<tt class="descname">get_process</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.get_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.get_process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns <tt class="xref py py-attr docutils literal"><span class="pre">self.ledger_process</span></tt> if it evaluates to <tt class="docutils literal"><span class="pre">True</span></tt>. If
-<tt class="xref py py-attr docutils literal"><span class="pre">self.ledger_process</span></tt> is not set the result of
-<a class="reference internal" href="#accounting.storage.ledgercli.Ledger.init_process" title="accounting.storage.ledgercli.Ledger.init_process"><tt class="xref py py-meth docutils literal"><span class="pre">self.init_process()</span></tt></a> is returned.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.get_transaction">
 <tt class="descname">get_transaction</tt><big>(</big><em>transaction_id</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.get_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.get_transaction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -135,39 +133,6 @@ ledger file.</p>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="accounting.storage.ledgercli.Ledger.init_process">
-<tt class="descname">init_process</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.init_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.init_process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new (presumably) ledger subprocess based on the args from
-<a class="reference internal" href="#accounting.storage.ledgercli.Ledger.assemble_arguments" title="accounting.storage.ledgercli.Ledger.assemble_arguments"><tt class="xref py py-meth docutils literal"><span class="pre">Ledger.assemble_arguments()</span></tt></a> and then runs
-<a class="reference internal" href="#accounting.storage.ledgercli.Ledger.read_until_prompt" title="accounting.storage.ledgercli.Ledger.read_until_prompt"><tt class="xref py py-meth docutils literal"><span class="pre">Ledger.read_until_prompt()</span></tt></a> once (which should return the banner
-text) and discards the output.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="accounting.storage.ledgercli.Ledger.locked_process">
-<tt class="descname">locked_process</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.locked_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.locked_process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Context manager that checks that the ledger process is not already
-locked, then &#8220;locks&#8221; the process and yields the process handle and
-unlocks the process when execution is returned.</p>
-<p>Since this decorated as a <a class="reference external" href="http://docs.python.org/3.3/library/contextlib.html#contextlib.contextmanager" title="(in Python v3.3)"><tt class="xref py py-func docutils literal"><span class="pre">contextlib.contextmanager()</span></tt></a> the
-recommended use is with the <tt class="docutils literal"><span class="pre">with</span></tt>-statement.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">locked_process</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
-    <span class="n">p</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="s">&#39;bal</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
-
-    <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_until_prompt</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="accounting.storage.ledgercli.Ledger.read_until_prompt">
-<tt class="descname">read_until_prompt</tt><big>(</big><em>process</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.read_until_prompt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.read_until_prompt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads from the subprocess instance <tt class="xref py py-data docutils literal"><span class="pre">process</span></tt> until it finds a
-combination of <tt class="docutils literal"><span class="pre">\n]\x20</span></tt> (the prompt), then returns the output
-without the prompt.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.reg">
 <tt class="descname">reg</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.reg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.reg" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -175,7 +140,11 @@ without the prompt.</p>
 <dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.send_command">
 <tt class="descname">send_command</tt><big>(</big><em>command</em><big>)</big><a class="reference internal" href="../_modules/accounting/storage/ledgercli.html#Ledger.send_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.storage.ledgercli.Ledger.send_command" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Creates a new ledger process with the specified <tt class="xref py py-data docutils literal"><span class="pre">command</span></tt> and
+returns the output.</p>
+<p>Raises an <a class="reference internal" href="accounting.html#accounting.exceptions.AccountingException" title="accounting.exceptions.AccountingException"><tt class="xref py py-class docutils literal"><span class="pre">AccountingException</span></tt></a>-based
+Exception based on the ledger-cli stderr.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="accounting.storage.ledgercli.Ledger.update_transaction">

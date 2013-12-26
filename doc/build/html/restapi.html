@@ -41,11 +41,11 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
         <li class="right" >
           <a href="README.html" title="accounting-api README"
              accesskey="P">previous</a> |</li>
@@ -63,13 +63,12 @@
 <p>The accounting-api projects main application provides a REST API for accounting
 data. This is the documentation for the various REST endpoints that the
 accounting-api application provides.</p>
-<div class="section" id="get-transactions">
-<h2>Get transactions<a class="headerlink" href="#get-transactions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="get-all-transactions">
+<h2>Get all transactions<a class="headerlink" href="#get-all-transactions" title="Permalink to this headline">¶</a></h2>
 <dl class="get">
 <dt id="get--transaction">
 <tt class="descname">GET </tt><tt class="descname">/transaction</tt><a class="headerlink" href="#get--transaction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get all transactions</p>
-<p><strong>Example request</strong></p>
+<dd><p><strong>Example request</strong></p>
 <div class="highlight-http"><div class="highlight"><pre><span class="nf">GET</span> <span class="nn">/transaction</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Host</span><span class="o">:</span> <span class="l">accounting.example</span>
 <span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
@@ -144,6 +143,57 @@ accounting-api application provides.</p>
       <span class="p">]</span>
     <span class="p">},</span>
   <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="get-a-single-transaction">
+<h2>Get a single transaction<a class="headerlink" href="#get-a-single-transaction" title="Permalink to this headline">¶</a></h2>
+<dl class="get">
+<dt id="get--transaction--string-transaction_id-">
+<tt class="descname">GET </tt><tt class="descname">/transaction/&lt;string:transaction_id&gt;</tt><a class="headerlink" href="#get--transaction--string-transaction_id-" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Example request</strong></p>
+<div class="highlight-http"><div class="highlight"><pre><span class="nf">GET</span> <span class="nn">/transaction/2aeea63b-0996-4ead-bc4c-e15505dff226</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Host</span><span class="o">:</span> <span class="l">accounting.example</span>
+<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
+</pre></div>
+</div>
+<p><strong>Example response</strong></p>
+<div class="highlight-http"><div class="highlight"><pre><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.0</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+
+<span class="p">{</span>
+  <span class="nt">&quot;transaction&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;Transaction&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;2013-12-26&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;2aeea63b-0996-4ead-bc4c-e15505dff226&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{},</span>
+    <span class="nt">&quot;payee&quot;</span><span class="p">:</span> <span class="s2">&quot;January Rent&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;postings&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="nt">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;Posting&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;account&quot;</span><span class="p">:</span> <span class="s2">&quot;Assets:Checking&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;amount&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;Amount&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;amount&quot;</span><span class="p">:</span> <span class="s2">&quot;-424.24&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;symbol&quot;</span><span class="p">:</span> <span class="s2">&quot;USD&quot;</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{}</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="nt">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;Posting&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;account&quot;</span><span class="p">:</span> <span class="s2">&quot;Expenses:Rent&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;amount&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;Amount&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;amount&quot;</span><span class="p">:</span> <span class="s2">&quot;424.24&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;symbol&quot;</span><span class="p">:</span> <span class="s2">&quot;USD&quot;</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{}</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -249,6 +299,62 @@ accounting-api application provides.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="update-a-transaction">
+<h2>Update a transaction<a class="headerlink" href="#update-a-transaction" title="Permalink to this headline">¶</a></h2>
+<dl class="post">
+<dt id="post--transaction--string-transaction_id-">
+<tt class="descname">POST </tt><tt class="descname">/transaction/&lt;string:transaction_id&gt;</tt><a class="headerlink" href="#post--transaction--string-transaction_id-" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Example request</strong></p>
+<div class="highlight-http"><div class="highlight"><pre><span class="nf">POST</span> <span class="nn">/transaction/2aeea63b-0996-4ead-bc4c-e15505dff226</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Host</span><span class="o">:</span> <span class="l">accounting.example</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
+
+<span class="p">{</span>
+  <span class="nt">&quot;transaction&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;Transaction&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;2013-12-26&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;2aeea63b-0996-4ead-bc4c-e15505dff226&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{},</span>
+    <span class="nt">&quot;payee&quot;</span><span class="p">:</span> <span class="s2">&quot;February Rent&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;postings&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="nt">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;Posting&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;account&quot;</span><span class="p">:</span> <span class="s2">&quot;Assets:Checking&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;amount&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;Amount&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;amount&quot;</span><span class="p">:</span> <span class="s2">&quot;-424.24&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;symbol&quot;</span><span class="p">:</span> <span class="s2">&quot;USD&quot;</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{}</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="nt">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;Posting&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;account&quot;</span><span class="p">:</span> <span class="s2">&quot;Expenses:Rent&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;amount&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;Amount&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;amount&quot;</span><span class="p">:</span> <span class="s2">&quot;424.24&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;symbol&quot;</span><span class="p">:</span> <span class="s2">&quot;USD&quot;</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{}</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Example response</strong></p>
+<div class="highlight-http"><div class="highlight"><pre><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.0</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+
+<span class="p">{</span>
+  <span class="nt">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;OK&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -263,9 +369,11 @@ accounting-api application provides.</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">REST API Documentation</a><ul>
-<li><a class="reference internal" href="#get-transactions">Get transactions</a></li>
+<li><a class="reference internal" href="#get-all-transactions">Get all transactions</a></li>
+<li><a class="reference internal" href="#get-a-single-transaction">Get a single transaction</a></li>
 <li><a class="reference internal" href="#add-transactions">Add transactions</a></li>
 <li><a class="reference internal" href="#delete-a-transaction">Delete a transaction</a></li>
+<li><a class="reference internal" href="#update-a-transaction">Update a transaction</a></li>
 </ul>
 </li>
 </ul>

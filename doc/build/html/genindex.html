@@ -244,6 +244,10 @@
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="api/accounting.storage.html#accounting.storage.ledgercli.Ledger.commit_changes">commit_changes() (accounting.storage.ledgercli.Ledger method)</a>
+  </dt>
+
+      
   <dt><a href="api/accounting.html#accounting.decorators.cors">cors() (in module accounting.decorators)</a>
   </dt>
 
@@ -299,14 +303,10 @@
   <dt><a href="api/accounting.storage.html#accounting.storage.Storage.get_accounts">get_accounts() (accounting.storage.Storage method)</a>
   </dt>
 
-      
-  <dt><a href="api/accounting.html#accounting.client.Client.get_balance">get_balance() (accounting.client.Client method)</a>
-  </dt>
-
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api/accounting.storage.html#accounting.storage.ledgercli.Ledger.get_process">get_process() (accounting.storage.ledgercli.Ledger method)</a>
+  <dt><a href="api/accounting.html#accounting.client.Client.get_balance">get_balance() (accounting.client.Client method)</a>
   </dt>
 
       
@@ -375,10 +375,6 @@
   <dt><a href="api/accounting.html#accounting.web.init_ledger">init_ledger() (in module accounting.web)</a>
   </dt>
 
-      
-  <dt><a href="api/accounting.storage.html#accounting.storage.ledgercli.Ledger.init_process">init_process() (accounting.storage.ledgercli.Ledger method)</a>
-  </dt>
-
   </dl></td>
 </tr></table>
 
@@ -400,13 +396,13 @@
   </dt>
 
       
-  <dt><a href="api/accounting.html#accounting.gtkclient.AccountingApplication.load_ui">load_ui() (accounting.gtkclient.AccountingApplication method)</a>
+  <dt><a href="api/accounting.html#accounting.exceptions.LedgerNotBalanced">LedgerNotBalanced</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api/accounting.storage.html#accounting.storage.ledgercli.Ledger.locked_process">locked_process() (accounting.storage.ledgercli.Ledger method)</a>
+  <dt><a href="api/accounting.html#accounting.gtkclient.AccountingApplication.load_ui">load_ui() (accounting.gtkclient.AccountingApplication method)</a>
   </dt>
 
   </dl></td>
@@ -460,15 +456,11 @@
   </dt>
 
       
-  <dt><a href="api/accounting.html#accounting.gtkclient.AccountingApplication.on_transaction_new_activate">on_transaction_new_activate() (accounting.gtkclient.AccountingApplication method)</a>
+  <dt><a href="api/accounting.html#accounting.gtkclient.AccountingApplication.on_transaction_refresh_activate">on_transaction_refresh_activate() (accounting.gtkclient.AccountingApplication method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api/accounting.html#accounting.gtkclient.AccountingApplication.on_transaction_refresh_activate">on_transaction_refresh_activate() (accounting.gtkclient.AccountingApplication method)</a>
-  </dt>
-
       
   <dt><a href="api/accounting.html#accounting.gtkclient.AccountingApplication.on_transaction_view_cursor_changed">on_transaction_view_cursor_changed() (accounting.gtkclient.AccountingApplication method)</a>
   </dt>
@@ -517,10 +509,6 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api/accounting.storage.html#accounting.storage.ledgercli.Ledger.read_until_prompt">read_until_prompt() (accounting.storage.ledgercli.Ledger method)</a>
-  </dt>
-
       
   <dt><a href="api/accounting.storage.html#accounting.storage.ledgercli.Ledger.reg">reg() (accounting.storage.ledgercli.Ledger method)</a>
   </dt>
@@ -591,6 +579,10 @@
   <dt><a href="api/accounting.html#accounting.web.transaction_get">transaction_get() (in module accounting.web)</a>
   </dt>
 
+      
+  <dt><a href="api/accounting.html#accounting.web.transaction_get_all">transaction_get_all() (in module accounting.web)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
@@ -607,6 +599,10 @@
 
       
   <dt><a href="api/accounting.storage.sql.html#accounting.storage.sql.models.Posting.transaction_uuid">transaction_uuid (accounting.storage.sql.models.Posting attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api/accounting.html#accounting.exceptions.TransactionIDCollision">TransactionIDCollision</a>
   </dt>
 
       

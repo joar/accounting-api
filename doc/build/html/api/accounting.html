@@ -40,11 +40,11 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
         <li><a href="../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -196,6 +196,18 @@ jsonify_exceptions decorator</p>
 </dd></dl>
 
 <dl class="exception">
+<dt id="accounting.exceptions.LedgerNotBalanced">
+<em class="property">exception </em><tt class="descclassname">accounting.exceptions.</tt><tt class="descname">LedgerNotBalanced</tt><big>(</big><em>message</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#accounting.exceptions.LedgerNotBalanced" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#accounting.exceptions.AccountingException" title="accounting.exceptions.AccountingException"><tt class="xref py py-class docutils literal"><span class="pre">accounting.exceptions.AccountingException</span></tt></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="accounting.exceptions.TransactionIDCollision">
+<em class="property">exception </em><tt class="descclassname">accounting.exceptions.</tt><tt class="descname">TransactionIDCollision</tt><big>(</big><em>message</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#accounting.exceptions.TransactionIDCollision" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#accounting.exceptions.AccountingException" title="accounting.exceptions.AccountingException"><tt class="xref py py-class docutils literal"><span class="pre">accounting.exceptions.AccountingException</span></tt></a></p>
+</dd></dl>
+
+<dl class="exception">
 <dt id="accounting.exceptions.TransactionNotFound">
 <em class="property">exception </em><tt class="descclassname">accounting.exceptions.</tt><tt class="descname">TransactionNotFound</tt><big>(</big><em>message</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/accounting/exceptions.html#TransactionNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.exceptions.TransactionNotFound" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#accounting.exceptions.AccountingException" title="accounting.exceptions.AccountingException"><tt class="xref py py-class docutils literal"><span class="pre">accounting.exceptions.AccountingException</span></tt></a></p>
@@ -221,11 +233,6 @@ jsonify_exceptions decorator</p>
 <dl class="method">
 <dt id="accounting.gtkclient.AccountingApplication.on_show_about_activate">
 <tt class="descname">on_show_about_activate</tt><big>(</big><em>widget</em><big>)</big><a class="reference internal" href="../_modules/accounting/gtkclient.html#AccountingApplication.on_show_about_activate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.gtkclient.AccountingApplication.on_show_about_activate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="accounting.gtkclient.AccountingApplication.on_transaction_new_activate">
-<tt class="descname">on_transaction_new_activate</tt><big>(</big><em>widget</em><big>)</big><a class="reference internal" href="../_modules/accounting/gtkclient.html#AccountingApplication.on_transaction_new_activate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.gtkclient.AccountingApplication.on_transaction_new_activate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -356,6 +363,11 @@ and the Flask endpoints.</p>
 <dl class="function">
 <dt id="accounting.web.transaction_get">
 <tt class="descclassname">accounting.web.</tt><tt class="descname">transaction_get</tt><big>(</big><em>transaction_id=None</em><big>)</big><a class="reference internal" href="../_modules/accounting/web.html#transaction_get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.web.transaction_get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="accounting.web.transaction_get_all">
+<tt class="descclassname">accounting.web.</tt><tt class="descname">transaction_get_all</tt><big>(</big><em>transaction_id=None</em><big>)</big><a class="headerlink" href="#accounting.web.transaction_get_all" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the JSON-serialized output of <tt class="xref py py-meth docutils literal"><span class="pre">accounting.Ledger.reg()</span></tt></p>
 </dd></dl>
 

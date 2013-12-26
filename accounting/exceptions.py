@@ -15,3 +15,11 @@ class AccountingException(Exception):
 
 class TransactionNotFound(AccountingException):
     pass
+
+
+class LedgerNotBalanced(AccountingException):
+    pass
+
+
+class TransactionIDCollision(AccountingException):
+    pass

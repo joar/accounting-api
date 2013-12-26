@@ -63,20 +63,25 @@ def transaction_by_id_options(transaction_id=None):
 
 
 @app.route('/transaction', methods=['GET'])
+@cors()
+@jsonify_exceptions
+def transaction_get_all(transaction_id=None):
+    '''
+    Returns the JSON-serialized output of :meth:`accounting.Ledger.reg`
+    '''
+    return jsonify(transactions=app.ledger.get_transactions())
+
+
 @app.route('/transaction/<string:transaction_id>', methods=['GET'])
 @cors()
 @jsonify_exceptions
 def transaction_get(transaction_id=None):
-    '''
-    Returns the JSON-serialized output of :meth:`accounting.Ledger.reg`
-    '''
-    if transaction_id is None:
-        return jsonify(transactions=app.ledger.get_transactions())
+    transaction = app.ledger.get_transaction(transaction_id)
 
-    try:
-        return jsonify(transaction=app.ledger.get_transaction(transaction_id))
-    except TransactionNotFound:
+    if transaction is None:
         abort(404)
+
+    return jsonify(transaction=transaction)
 
 
 @app.route('/transaction/<string:transaction_id>', methods=['POST'])

@@ -2,17 +2,20 @@
 # https://gitorious.org/conservancy/accounting-api
 # License: AGPLv3-or-later
 
+import os
 import sys
 import subprocess
 import logging
 import time
 import re
+import pygit2
 
 from datetime import datetime
 from xml.etree import ElementTree
 from contextlib import contextmanager
 
-from accounting.exceptions import AccountingException, TransactionNotFound
+from accounting.exceptions import AccountingException, TransactionNotFound, \
+    LedgerNotBalanced, TransactionIDCollision
 from accounting.models import Account, Transaction, Posting, Amount
 from accounting.storage import Storage
 
@@ -31,140 +34,92 @@ class Ledger(Storage):
         self.ledger_file = ledger_file
         _log.info('ledger file: %s', ledger_file)
 
-        self.locked = False
-        self.ledger_process = None
+        try:
+            self.repository = pygit2.Repository(
+                os.path.join(os.path.dirname(self.ledger_file), '.git'))
+        except KeyError:
+            self.repository = None
+            _log.warning('ledger_file directory does not contain a .git'
+                         ' directory, will not track changes.')
 
-    @contextmanager
-    def locked_process(self):
-        r'''
-        Context manager that checks that the ledger process is not already
-        locked, then "locks" the process and yields the process handle and
-        unlocks the process when execution is returned.
+        # The signature used as author and committer in git commits
+        self.signature = pygit2.Signature(
+            name='accounting-api',
+            email='accounting-api@accounting.example')
 
-        Since this decorated as a :func:`contextlib.contextmanager` the
-        recommended use is with the ``with``-statement.
-
-        .. code-block:: python
-
-            with self.locked_process() as p:
-                p.stdin.write(b'bal\n')
-
-                output = self.read_until_prompt(p)
-
+    def commit_changes(self, message):
         '''
-        if self.locked:
-            raise RuntimeError('The process has already been locked,'
-                               ' something\'s out of order.')
+        Commits any changes to :attr:`self.ledger_file` to the git repository
+        '''
+        if self.repository is None:
+            return
 
-            # XXX: This code has no purpose in a single-threaded process
-            timeout = 5  # Seconds
+        # Add the ledger file
+        self.repository.index.read()
+        self.repository.index.add(os.path.basename(self.ledger_file))
+        tree_id = self.repository.index.write_tree()
+        self.repository.index.write()
 
-            for i in range(1, timeout + 2):
-                if i > timeout:
-                    raise RuntimeError('Ledger process is already locked')
+        parents = []
+        try:
+            parents.append(self.repository.head.target)
+        except pygit2.GitError:
+            _log.info('Repository has no head, creating initial commit')
 
-                if not self.locked:
-                    break
-                else:
-                    _log.info('Waiting for one second... %d/%d', i, timeout)
-                    time.sleep(1)
+        commit_id = self.repository.create_commit(
+            'HEAD',
+            self.signature,
+            self.signature,
+            message,
+            tree_id,
+            parents)
 
-        process = self.get_process()
-
-        self.locked = True
-        _log.debug('Lock enabled')
-
-        yield process
-
-        self.locked = False
-        _log.debug('Lock disabled')
-
-    def assemble_arguments(self):
+    def assemble_arguments(self, command=None):
         '''
         Returns a list of arguments suitable for :class:`subprocess.Popen`
         based on :attr:`self.ledger_bin` and :attr:`self.ledger_file`.
         '''
-        return [
+        args = [
             self.ledger_bin,
             '-f',
             self.ledger_file,
         ]
+        if command is not None:
+            args.append(command)
 
-    def init_process(self):
+        return args
+
+    def send_command(self, command):
         '''
-        Creates a new (presumably) ledger subprocess based on the args from
-        :meth:`Ledger.assemble_arguments()` and then runs
-        :meth:`Ledger.read_until_prompt()` once (which should return the banner
-        text) and discards the output.
+        Creates a new ledger process with the specified :data:`command` and
+        returns the output.
+
+        Raises an :class:`~accounting.exceptions.AccountingException`-based
+        Exception based on the ledger-cli stderr.
         '''
-        _log.debug('Starting ledger process...')
-        self.ledger_process = subprocess.Popen(
-            self.assemble_arguments(),
+        _log.debug('Sending command: %r', command)
+        _log.debug('Starting ledger...')
+        p = subprocess.Popen(
+            self.assemble_arguments(command=command),
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE,
             stderr=subprocess.PIPE)
 
-        # Swallow the banner
-        with self.locked_process() as p:
-            self.read_until_prompt(p)
+        output = p.stdout.read()
+        stderr = p.stderr.read().decode('utf8')
 
-        return self.ledger_process
+        if stderr:
+            lines = stderr.split('\n')
+            if 'While balancing transaction from' in lines[1]:
+                raise LedgerNotBalanced('\n'.join(lines[2:]))
 
-    def get_process(self):
-        '''
-        Returns :attr:`self.ledger_process` if it evaluates to ``True``. If
-        :attr:`self.ledger_process` is not set the result of
-        :meth:`self.init_process() <Ledger.init_process>` is returned.
-        '''
-        return self.ledger_process or self.init_process()
+            raise AccountingException(stderr)
 
-    def read_until_prompt(self, process):
-        r'''
-        Reads from the subprocess instance :data:`process` until it finds a
-        combination of ``\n]\x20`` (the prompt), then returns the output
-        without the prompt.
-        '''
-        output = b''
-
-        while True:
-            line = process.stdout.read(1)  # XXX: This is a hack
-
-            if len(line) > 0:
-                pass
-                #_log.debug('line: %s', line)
-
-            output += line
-
-            if b'\n] ' in output:
-                _log.debug('Found prompt!')
-                break
-
-        output = output[:-3]  # Cut away the prompt
-
-        _log.debug('output: %s', output)
+        p.send_signal(subprocess.signal.SIGTERM)
+        _log.debug('Waiting for ledger to shut down')
+        p.wait()
 
         return output
-
-    def send_command(self, command):
-        output = None
-
-        with self.locked_process() as p:
-            if isinstance(command, str):
-                command = command.encode('utf8')
-
-            _log.debug('Sending command: %r', command)
-
-            p.stdin.write(command + b'\n')
-            p.stdin.flush()
-
-            output = self.read_until_prompt(p)
-
-            self.ledger_process.send_signal(subprocess.signal.SIGTERM)
-            _log.debug('Waiting for ledger to shut down')
-            self.ledger_process.wait()
-            self.ledger_process = None
-
-            return output
 
     def add_transaction(self, transaction):
         '''
@@ -176,6 +131,13 @@ class Ledger(Storage):
         if transaction.id is None:
             _log.debug('No ID found. Generating an ID.')
             transaction.generate_id()
+
+        exists = self.get_transaction(transaction.id)
+
+        if exists is not None:
+            raise TransactionIDCollision(
+                'A transaction with the id %s already exists: %s' %
+                (transaction.id, exists))
 
         transaction.metadata.update({'Id': transaction.id})
 
@@ -210,6 +172,8 @@ class Ledger(Storage):
 
         with open(self.ledger_file, 'ab') as f:
             f.write(output)
+
+        self.commit_changes('Added transaction %s' % transaction.id)
 
         _log.info('Added transaction %s', transaction.id)
 
@@ -270,9 +234,6 @@ class Ledger(Storage):
         for transaction in transactions:
             if transaction.id == transaction_id:
                 return transaction
-
-        raise TransactionNotFound(
-            'No transaction with id {0} found'.format(transaction_id))
 
     def reg(self):
         output = self.send_command('xml')
@@ -431,6 +392,8 @@ class Ledger(Storage):
         with open(self.ledger_file, 'w') as f:
             for line in lines:
                 f.write(line)
+
+        self.commit_changes('Removed transaction %s' % transaction_id)
 
     def update_transaction(self, transaction):
         '''

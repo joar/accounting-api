@@ -173,6 +173,18 @@ class Ledger(Storage):
         with open(self.ledger_file, 'ab') as f:
             f.write(output)
 
+        # Check to see that no errors were introduced
+        try:
+            self.get_transactions()
+        except AccountingException as exc:
+            # TODO: Do a hard reset on the repository using Repository.reset,
+            # this is on hold because of
+            # https://github.com/libgit2/pygit2/issues/271.
+            # This solution will work in the meantime
+            self.delete_transaction(transaction.id)
+            setattr(exc, 'transaction', transaction)
+            raise exc
+
         self.commit_changes('Added transaction %s' % transaction.id)
 
         _log.info('Added transaction %s', transaction.id)

@@ -7,6 +7,7 @@ class AccountingException(Exception):
     Used as a base for exceptions that are returned to the caller via the
     jsonify_exceptions decorator
     '''
+    http_code = 500
     def __init__(self, message, **kw):
         self.message = message
         for key, value in kw.items():
@@ -14,12 +15,12 @@ class AccountingException(Exception):
 
 
 class TransactionNotFound(AccountingException):
-    pass
+    http_code = 404
 
 
 class LedgerNotBalanced(AccountingException):
-    pass
+    http_code = 400
 
 
 class TransactionIDCollision(AccountingException):
-    pass
+    http_code = 400

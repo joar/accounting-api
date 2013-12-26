@@ -9,6 +9,7 @@ import copy
 import uuid
 
 from datetime import datetime
+from decimal import Decimal
 
 from flask import json
 
@@ -17,7 +18,7 @@ from accounting.web import app, init_ledger
 from accounting.transport import AccountingEncoder, AccountingDecoder
 from accounting.models import Transaction, Posting, Amount
 
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 
 class TransactionTestCase(unittest.TestCase):
@@ -263,13 +264,36 @@ class TransactionTestCase(unittest.TestCase):
             ]
         )
 
-        self._post_json('/transaction', transaction)
+        response = self._post_json('/transaction', transaction, expect=400)
 
-        response = self._get_json('/transaction')
+        self.assertEqual(response['error']['type'], 'LedgerNotBalanced')
 
-        import pdb; pdb.set_trace()
+    def test_update_transaction_amounts(self):
+        transaction = self._add_simple_transaction()
+        response = self._get_json(
+            '/transaction/' + transaction.id)
 
-    def test_update_transaction_amounts(self): pass
+        transaction = response['transaction']
+
+        for posting in transaction.postings:
+            posting.amount.amount *= Decimal(1.50)
+
+        response = self._post_json('/transaction/' + transaction.id,
+                                   {'transaction': transaction})
+
+        self.assertEqual(response['status'], 'OK')
+
+        response = self._get_json('/transaction/' + transaction.id)
+
+        self.assertEqual(response['transaction'], transaction)
+
+    def test_delete_nonexistent_transaction(self):
+        response = self._open_json('DELETE', '/transaction/I-do-not-exist',
+                                   expect=404)
+
+        self.assertEqual(response['error']['type'], 'TransactionNotFound')
+
+    def test_post_transaction_with_metadata(self): pass
 
 
 if __name__ == '__main__':

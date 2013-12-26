@@ -19,7 +19,11 @@ def jsonify_exceptions(func):
         try:
             return func(*args, **kw)
         except AccountingException as exc:
-            return jsonify(error=exc)
+            response = jsonify(error=exc)
+
+            response.status_code = exc.http_code
+
+            return response
 
     return wrapper
 

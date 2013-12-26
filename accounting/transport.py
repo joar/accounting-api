@@ -44,7 +44,8 @@ class AccountingEncoder(json.JSONEncoder):
         elif isinstance(o, AccountingException):
             return dict(
                 type=o.__class__.__name__,
-                message=o.message
+                message=o.message,
+                transaction=getattr(o, 'transaction', None)
             )
 
         return json.JSONEncoder.default(self, o)

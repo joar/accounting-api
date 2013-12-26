@@ -41,11 +41,11 @@
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../../http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
         <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -69,7 +69,7 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 
-<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">render_template</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">abort</span>
 <span class="kn">from</span> <span class="nn">flask.ext.script</span> <span class="kn">import</span> <span class="n">Manager</span>
 <span class="kn">from</span> <span class="nn">flask.ext.migrate</span> <span class="kn">import</span> <span class="n">Migrate</span><span class="p">,</span> <span class="n">MigrateCommand</span>
 
@@ -78,32 +78,18 @@
 <span class="kn">from</span> <span class="nn">accounting.storage.ledgercli</span> <span class="kn">import</span> <span class="n">Ledger</span>
 <span class="kn">from</span> <span class="nn">accounting.storage.sql</span> <span class="kn">import</span> <span class="n">SQLStorage</span>
 <span class="kn">from</span> <span class="nn">accounting.transport</span> <span class="kn">import</span> <span class="n">AccountingEncoder</span><span class="p">,</span> <span class="n">AccountingDecoder</span>
-<span class="kn">from</span> <span class="nn">accounting.exceptions</span> <span class="kn">import</span> <span class="n">AccountingException</span>
+<span class="kn">from</span> <span class="nn">accounting.exceptions</span> <span class="kn">import</span> <span class="n">AccountingException</span><span class="p">,</span> <span class="n">TransactionNotFound</span>
 <span class="kn">from</span> <span class="nn">accounting.decorators</span> <span class="kn">import</span> <span class="n">jsonify_exceptions</span><span class="p">,</span> <span class="n">cors</span>
 
 
 <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s">&#39;accounting&#39;</span><span class="p">)</span>
 <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">from_pyfile</span><span class="p">(</span><span class="s">&#39;config.py&#39;</span><span class="p">)</span>
 
-<span class="n">storage</span> <span class="o">=</span> <span class="n">Storage</span><span class="p">()</span>
-
-<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="n">SQLStorage</span><span class="p">):</span>
-    <span class="c"># TODO: Move migration stuff into SQLStorage</span>
-    <span class="n">db</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">db</span>
-    <span class="n">migrate</span> <span class="o">=</span> <span class="n">Migrate</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
-
-    <span class="n">manager</span> <span class="o">=</span> <span class="n">Manager</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
-    <span class="n">manager</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="s">&#39;db&#39;</span><span class="p">,</span> <span class="n">MigrateCommand</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">ledger</span> <span class="o">=</span> <span class="n">Storage</span><span class="p">()</span>
 
 
-<span class="nd">@app.before_request</span>
 <div class="viewcode-block" id="init_ledger"><a class="viewcode-back" href="../../api/accounting.html#accounting.web.init_ledger">[docs]</a><span class="k">def</span> <span class="nf">init_ledger</span><span class="p">():</span>
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    :py:meth:`flask.Flask.before_request`-decorated method that initializes an</span>
-<span class="sd">    :py:class:`accounting.Ledger` object.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">global</span> <span class="n">ledger</span>
-    <span class="c">#ledger = Ledger(ledger_file=app.config[&#39;LEDGER_FILE&#39;])</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">ledger</span> <span class="o">=</span> <span class="n">Ledger</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
 
 
 <span class="c"># These will convert output from our internal classes to JSON and back</span></div>
@@ -144,9 +130,12 @@
 <span class="sd">    Returns the JSON-serialized output of :meth:`accounting.Ledger.reg`</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">if</span> <span class="n">transaction_id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">transactions</span><span class="o">=</span><span class="n">storage</span><span class="o">.</span><span class="n">get_transactions</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">transactions</span><span class="o">=</span><span class="n">app</span><span class="o">.</span><span class="n">ledger</span><span class="o">.</span><span class="n">get_transactions</span><span class="p">())</span>
 
-    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">transaction</span><span class="o">=</span><span class="n">storage</span><span class="o">.</span><span class="n">get_transaction</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">transaction</span><span class="o">=</span><span class="n">app</span><span class="o">.</span><span class="n">ledger</span><span class="o">.</span><span class="n">get_transaction</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">TransactionNotFound</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
 
 </div>
 <span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/transaction/&lt;string:transaction_id&gt;&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;POST&#39;</span><span class="p">])</span>
@@ -164,7 +153,7 @@
     <span class="k">elif</span> <span class="n">transaction</span><span class="o">.</span><span class="n">id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">transaction</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">transaction_id</span>
 
-    <span class="n">storage</span><span class="o">.</span><span class="n">update_transaction</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">ledger</span><span class="o">.</span><span class="n">update_transaction</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s">&#39;OK&#39;</span><span class="p">)</span>
 
@@ -176,7 +165,7 @@
     <span class="k">if</span> <span class="n">transaction_id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">AccountingException</span><span class="p">(</span><span class="s">&#39;Transaction ID cannot be None&#39;</span><span class="p">)</span>
 
-    <span class="n">storage</span><span class="o">.</span><span class="n">delete_transaction</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">ledger</span><span class="o">.</span><span class="n">delete_transaction</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s">&#39;OK&#39;</span><span class="p">)</span>
 
@@ -243,7 +232,7 @@
     <span class="n">transaction_ids</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">transactions</span><span class="p">:</span>
-        <span class="n">transaction_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">storage</span><span class="o">.</span><span class="n">add_transaction</span><span class="p">(</span><span class="n">transaction</span><span class="p">))</span>
+        <span class="n">transaction_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">ledger</span><span class="o">.</span><span class="n">add_transaction</span><span class="p">(</span><span class="n">transaction</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s">&#39;OK&#39;</span><span class="p">,</span> <span class="n">transaction_ids</span><span class="o">=</span><span class="n">transaction_ids</span><span class="p">)</span>
 
@@ -260,8 +249,7 @@
                         <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;Filter logging output. Possible values:&#39;</span> <span class="o">+</span>
                               <span class="s">&#39; CRITICAL, ERROR, WARNING, INFO, DEBUG&#39;</span><span class="p">))</span>
 
-    <span class="k">global</span> <span class="n">storage</span>
-    <span class="n">storage</span> <span class="o">=</span> <span class="n">Ledger</span><span class="p">(</span><span class="n">app</span><span class="o">=</span><span class="n">app</span><span class="p">)</span>
+    <span class="n">init_ledger</span><span class="p">()</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
 

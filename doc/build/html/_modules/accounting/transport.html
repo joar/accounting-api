@@ -41,11 +41,11 @@
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../../http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
         <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -65,6 +65,7 @@
 
 <span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">json</span>
 
+<span class="kn">from</span> <span class="nn">accounting.exceptions</span> <span class="kn">import</span> <span class="n">AccountingException</span>
 <span class="kn">from</span> <span class="nn">accounting.models</span> <span class="kn">import</span> <span class="n">Amount</span><span class="p">,</span> <span class="n">Transaction</span><span class="p">,</span> <span class="n">Posting</span><span class="p">,</span> <span class="n">Account</span>
 
 
@@ -99,10 +100,10 @@
                 <span class="n">amount</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">amount</span><span class="p">),</span>
                 <span class="n">symbol</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">symbol</span>
             <span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">AccountingException</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
-                <span class="n">__type__</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
-                <span class="n">args</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">args</span>
+                <span class="nb">type</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                <span class="n">message</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">message</span>
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
@@ -117,7 +118,7 @@
             <span class="k">return</span> <span class="n">d</span>
 
         <span class="n">types</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">__name__</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Amount</span><span class="p">,</span> <span class="n">Transaction</span><span class="p">,</span> <span class="n">Posting</span><span class="p">,</span>
-                                         <span class="n">Account</span><span class="p">]}</span>
+                                         <span class="n">Account</span><span class="p">,</span> <span class="n">AccountingException</span><span class="p">]}</span>
 
         <span class="n">_type</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;__type__&#39;</span><span class="p">)</span>
 

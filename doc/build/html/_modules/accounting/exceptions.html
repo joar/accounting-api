@@ -41,11 +41,11 @@
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../../http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
         <li><a href="../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -66,6 +66,13 @@
 <span class="sd">    Used as a base for exceptions that are returned to the caller via the</span>
 <span class="sd">    jsonify_exceptions decorator</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TransactionNotFound"><a class="viewcode-back" href="../../api/accounting.html#accounting.exceptions.TransactionNotFound">[docs]</a><span class="k">class</span> <span class="nc">TransactionNotFound</span><span class="p">(</span><span class="n">AccountingException</span><span class="p">):</span>
     <span class="k">pass</span></div>
 </pre></div>
 

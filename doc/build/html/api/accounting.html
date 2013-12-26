@@ -189,10 +189,16 @@ exceptions which are returned to the client as JSON.</p>
 <span id="accounting-exceptions-module"></span><h2>accounting.exceptions module<a class="headerlink" href="#module-accounting.exceptions" title="Permalink to this headline">¶</a></h2>
 <dl class="exception">
 <dt id="accounting.exceptions.AccountingException">
-<em class="property">exception </em><tt class="descclassname">accounting.exceptions.</tt><tt class="descname">AccountingException</tt><a class="reference internal" href="../_modules/accounting/exceptions.html#AccountingException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.exceptions.AccountingException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descclassname">accounting.exceptions.</tt><tt class="descname">AccountingException</tt><big>(</big><em>message</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/accounting/exceptions.html#AccountingException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.exceptions.AccountingException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">builtins.Exception</span></tt></p>
 <p>Used as a base for exceptions that are returned to the caller via the
 jsonify_exceptions decorator</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="accounting.exceptions.TransactionNotFound">
+<em class="property">exception </em><tt class="descclassname">accounting.exceptions.</tt><tt class="descname">TransactionNotFound</tt><big>(</big><em>message</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/accounting/exceptions.html#TransactionNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.exceptions.TransactionNotFound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#accounting.exceptions.AccountingException" title="accounting.exceptions.AccountingException"><tt class="xref py py-class docutils literal"><span class="pre">accounting.exceptions.AccountingException</span></tt></a></p>
 </dd></dl>
 
 </div>
@@ -330,9 +336,7 @@ and the Flask endpoints.</p>
 <dl class="function">
 <dt id="accounting.web.init_ledger">
 <tt class="descclassname">accounting.web.</tt><tt class="descname">init_ledger</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/accounting/web.html#init_ledger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accounting.web.init_ledger" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference external" href="http://flask.pocoo.org/docs/api/#flask.Flask.before_request" title="(in Flask v0.10)"><tt class="xref py py-meth docutils literal"><span class="pre">flask.Flask.before_request()</span></tt></a>-decorated method that initializes an
-<tt class="xref py py-class docutils literal"><span class="pre">accounting.Ledger</span></tt> object.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="accounting.web.main">

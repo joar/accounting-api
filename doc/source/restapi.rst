@@ -1,6 +1,10 @@
-==========
- REST API
-==========
+========================
+ REST API Documentation
+========================
+
+The accounting-api projects main application provides a REST API for accounting
+data. This is the documentation for the various REST endpoints that the
+accounting-api application provides.
 
 Get transactions
 ----------------
@@ -28,63 +32,63 @@ Get transactions
         {
           "transactions": [
             {
-              "__type__": "Transaction", 
-              "date": "2010-01-01", 
-              "id": "Ids can be anything", 
-              "metadata": {}, 
-              "payee": "Kindly T. Donor", 
+              "__type__": "Transaction",
+              "date": "2010-01-01",
+              "id": "Ids can be anything",
+              "metadata": {},
+              "payee": "Kindly T. Donor",
               "postings": [
                 {
-                  "__type__": "Posting", 
-                  "account": "Income:Foo:Donation", 
+                  "__type__": "Posting",
+                  "account": "Income:Foo:Donation",
                   "amount": {
-                    "__type__": "Amount", 
-                    "amount": "-100", 
+                    "__type__": "Amount",
+                    "amount": "-100",
                     "symbol": "$"
-                  }, 
+                  },
                   "metadata": {
                     "Invoice": "Projects/Foo/Invoices/Invoice20100101.pdf"
                   }
-                }, 
+                },
                 {
-                  "__type__": "Posting", 
-                  "account": "Assets:Checking", 
+                  "__type__": "Posting",
+                  "account": "Assets:Checking",
                   "amount": {
-                    "__type__": "Amount", 
-                    "amount": "100", 
+                    "__type__": "Amount",
+                    "amount": "100",
                     "symbol": "$"
-                  }, 
+                  },
                   "metadata": {}
                 }
               ]
-            }, 
+            },
             {
-              "__type__": "Transaction", 
-              "date": "2011-03-15", 
-              "id": "but mind you if they collide.", 
-              "metadata": {}, 
-              "payee": "Another J. Donor", 
+              "__type__": "Transaction",
+              "date": "2011-03-15",
+              "id": "but mind you if they collide.",
+              "metadata": {},
+              "payee": "Another J. Donor",
               "postings": [
                 {
-                  "__type__": "Posting", 
-                  "account": "Income:Foo:Donation", 
+                  "__type__": "Posting",
+                  "account": "Income:Foo:Donation",
                   "amount": {
-                    "__type__": "Amount", 
-                    "amount": "-400", 
+                    "__type__": "Amount",
+                    "amount": "-400",
                     "symbol": "$"
-                  }, 
+                  },
                   "metadata": {
                     "Approval": "Projects/Foo/earmark-record.txt"
                   }
-                }, 
+                },
                 {
-                  "__type__": "Posting", 
-                  "account": "Assets:Checking", 
+                  "__type__": "Posting",
+                  "account": "Assets:Checking",
                   "amount": {
-                    "__type__": "Amount", 
-                    "amount": "400", 
+                    "__type__": "Amount",
+                    "amount": "400",
                     "symbol": "$"
-                  }, 
+                  },
                   "metadata": {}
                 }
               ]
@@ -111,36 +115,36 @@ Add transactions
         {
           "transactions": [
             {
-              "__type__": "Transaction", 
-              "date": "2010-01-01", 
-              "id": "Ids can be anything", 
-              "metadata": {}, 
-              "payee": "Kindly T. Donor", 
+              "__type__": "Transaction",
+              "date": "2010-01-01",
+              "id": "Ids can be anything",
+              "metadata": {},
+              "payee": "Kindly T. Donor",
               "postings": [
                 {
-                  "__type__": "Posting", 
-                  "account": "Income:Foo:Donation", 
+                  "__type__": "Posting",
+                  "account": "Income:Foo:Donation",
                   "amount": {
-                    "__type__": "Amount", 
-                    "amount": "-100", 
+                    "__type__": "Amount",
+                    "amount": "-100",
                     "symbol": "$"
-                  }, 
+                  },
                   "metadata": {
                     "Invoice": "Projects/Foo/Invoices/Invoice20100101.pdf"
                   }
-                }, 
+                },
                 {
-                  "__type__": "Posting", 
-                  "account": "Assets:Checking", 
+                  "__type__": "Posting",
+                  "account": "Assets:Checking",
                   "amount": {
-                    "__type__": "Amount", 
-                    "amount": "100", 
+                    "__type__": "Amount",
+                    "amount": "100",
                     "symbol": "$"
-                  }, 
+                  },
                   "metadata": {}
                 }
               ]
-            }, 
+            },
           ]
         }
 

@@ -41,11 +41,11 @@
           <a href="../../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../../../http-routingtable.html" title="HTTP Routing Table"
-             >routing table</a> |</li>
-        <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
         <li><a href="../../../index.html">Accounting API 0.1-beta documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../storage.html" accesskey="U">accounting.storage</a> &raquo;</li> 
@@ -72,9 +72,9 @@
 <span class="kn">from</span> <span class="nn">xml.etree</span> <span class="kn">import</span> <span class="n">ElementTree</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
 
-<span class="kn">from</span> <span class="nn">accounting.exceptions</span> <span class="kn">import</span> <span class="n">AccountingException</span>
+<span class="kn">from</span> <span class="nn">accounting.exceptions</span> <span class="kn">import</span> <span class="n">AccountingException</span><span class="p">,</span> <span class="n">TransactionNotFound</span>
 <span class="kn">from</span> <span class="nn">accounting.models</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Transaction</span><span class="p">,</span> <span class="n">Posting</span><span class="p">,</span> <span class="n">Amount</span>
-<span class="kn">from</span> <span class="nn">accounting.storage</span> <span class="kn">import</span> <span class="n">Storage</span><span class="p">,</span> <span class="n">TransactionNotFound</span>
+<span class="kn">from</span> <span class="nn">accounting.storage</span> <span class="kn">import</span> <span class="n">Storage</span>
 
 <span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
@@ -189,6 +189,10 @@
         <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
             <span class="n">line</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c"># XXX: This is a hack</span>
 
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">pass</span>
+                <span class="c">#_log.debug(&#39;line: %s&#39;, line)</span>
+
             <span class="n">output</span> <span class="o">+=</span> <span class="n">line</span>
 
             <span class="k">if</span> <span class="n">b</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">] &#39;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
@@ -207,6 +211,8 @@
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">locked_process</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">command</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">)</span>
+
+            <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Sending command: </span><span class="si">%r</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">command</span><span class="p">)</span>
 
             <span class="n">p</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">command</span> <span class="o">+</span> <span class="n">b</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
             <span class="n">p</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
@@ -264,6 +270,8 @@
 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ledger_file</span><span class="p">,</span> <span class="s">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Added transaction </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">transaction</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 
         <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;written to file: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
 
@@ -323,8 +331,8 @@
             <span class="k">if</span> <span class="n">transaction</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">transaction_id</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">transaction</span>
 
-        <span class="k">raise</span> <span class="n">TransactionNotFound</span><span class="p">(</span><span class="s">&#39;No transaction with id </span><span class="si">%s</span><span class="s"> found&#39;</span><span class="p">,</span>
-                                  <span class="n">transaction_id</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">TransactionNotFound</span><span class="p">(</span>
+            <span class="s">&#39;No transaction with id {0} found&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">))</span>
 </div>
 <div class="viewcode-block" id="Ledger.reg"><a class="viewcode-back" href="../../../api/accounting.storage.html#accounting.storage.ledgercli.Ledger.reg">[docs]</a>    <span class="k">def</span> <span class="nf">reg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_command</span><span class="p">(</span><span class="s">&#39;xml&#39;</span><span class="p">)</span>
@@ -473,6 +481,11 @@
             <span class="c"># Delete the preceding line to make the file</span>
             <span class="n">del_start</span> <span class="o">-=</span> <span class="mi">1</span>
 
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Removing transaction with ID: </span><span class="si">%s</span><span class="s"> (lines </span><span class="si">%d</span><span class="s">-</span><span class="si">%d</span><span class="s">)&#39;</span><span class="p">,</span>
+                   <span class="n">transaction_id</span><span class="p">,</span>
+                   <span class="n">del_start</span><span class="p">,</span>
+                   <span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;next_transaction_or_eof&#39;</span><span class="p">])</span>
+
         <span class="k">del</span> <span class="n">lines</span><span class="p">[</span><span class="n">del_start</span><span class="p">:</span><span class="n">semantic_lines</span><span class="p">[</span><span class="s">&#39;next_transaction_or_eof&#39;</span><span class="p">]]</span>
 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ledger_file</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -498,6 +511,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">add_transaction</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
 
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Updated transaction </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">transaction</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
         <span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Updated transaction from: </span><span class="si">%s</span><span class="s"> to: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">old_transaction</span><span class="p">,</span>
                    <span class="n">transaction</span><span class="p">)</span>
 

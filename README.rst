@@ -1,8 +1,8 @@
-.. vim: textwith=80
+.. vim: textwidth=80
 
-====================
- The Accounting API
-====================
+=======================
+ accounting-api README
+=======================
 
 --------------
  Dependencies

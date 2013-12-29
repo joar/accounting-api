@@ -293,8 +293,48 @@ class TransactionTestCase(unittest.TestCase):
 
         self.assertEqual(response['error']['type'], 'TransactionNotFound')
 
-    def test_post_transaction_with_metadata(self): pass
+    def test_post_transaction_with_metadata(self):
+        transaction = copy.deepcopy(self.simple_transaction)
 
+        transaction.metadata.update({'foo': 'bar'})
+
+        response = self._post_json('/transaction', transaction)
+
+        transaction_id = response['transaction_ids'][0]
+
+        response = self._get_json('/transaction/' + transaction_id)
+
+        self.assertEqual(
+            response['transaction'].metadata,
+            transaction.metadata)
+
+    def test_post_transaction_with_posting_metadata(self):
+        transaction = copy.deepcopy(self.simple_transaction)
+
+        postings = [
+            Posting(account='Assets:Checking', metadata={'assets': 'checking'},
+                    amount=Amount(amount='-100.10', symbol='$')),
+            Posting(account='Expenses:Foo', metadata={'expenses': 'foo'},
+                    amount=Amount(amount='100.10', symbol='$'))
+        ]
+
+        transaction.postings = postings
+
+        response = self._post_json('/transaction', transaction)
+
+        transaction_id = response['transaction_ids'][0]
+
+        response = self._get_json('/transaction/' + transaction_id)
+
+        for posting in response['transaction'].postings:
+            if posting.account == 'Expenses:Foo':
+                self.assertEqual(posting.metadata, {'expenses': 'foo'})
+            elif posting.account == 'Assets:Checking':
+                self.assertEqual(posting.metadata, {'assets': 'checking'})
+            else:
+                assert False, \
+                    'Something about this transaction\'s postings is' \
+                    ' unexpected'
 
 if __name__ == '__main__':
     unittest.main()

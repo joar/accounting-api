@@ -6,13 +6,10 @@ import os
 import sys
 import subprocess
 import logging
-import time
 import re
-import pygit2
 
 from datetime import datetime
 from xml.etree import ElementTree
-from contextlib import contextmanager
 
 from accounting.exceptions import AccountingException, TransactionNotFound, \
     LedgerNotBalanced, TransactionIDCollision
@@ -20,6 +17,14 @@ from accounting.models import Account, Transaction, Posting, Amount
 from accounting.storage import Storage
 
 _log = logging.getLogger(__name__)
+
+HAS_PYGIT = False
+
+try:
+    import pygit2
+    HAS_PYGIT = True
+except ImportError:
+    _log.warning('Failed to import pygit2')
 
 
 class Ledger(Storage):
@@ -33,6 +38,12 @@ class Ledger(Storage):
         self.ledger_bin = ledger_bin or 'ledger'
         self.ledger_file = ledger_file
         _log.info('ledger file: %s', ledger_file)
+
+        self.init_pygit()
+
+    def init_pygit(self):
+        if not HAS_PYGIT:
+            return False
 
         try:
             self.repository = pygit2.Repository(
@@ -89,7 +100,7 @@ class Ledger(Storage):
 
         return args
 
-    def send_command(self, command):
+    def run_command(self, command):
         '''
         Creates a new ledger process with the specified :data:`command` and
         returns the output.
@@ -147,11 +158,24 @@ class Ledger(Storage):
 
         metadata_template = '   ;{0}: {1}\n'
 
-        # TODO: Generate metadata for postings
         posting_template = ('  {account} {p.amount.symbol}'
                             ' {p.amount.amount}\n')
 
         output = b''
+
+        out_postings = ''
+
+        for posting in transaction.postings:
+            out_postings += posting_template.format(
+                p=posting,
+                account=posting.account + ' ' * (
+                    80 - (len(posting.account) + len(posting.amount.symbol) +
+                          len(str(posting.amount.amount)) + 1 + 2))
+            )
+
+            if len(posting.metadata):
+                for k, v in posting.metadata.items():
+                    out_postings += metadata_template.format(str(k), str(v))
 
         # XXX: Even I hardly understands what this does, however I indent it it
         # stays unreadable.
@@ -159,15 +183,9 @@ class Ledger(Storage):
             date=transaction.date.strftime('%Y-%m-%d'),
             t=transaction,
             metadata=''.join([
-                metadata_template.format(k, v)
+                metadata_template.format(str(k), str(v))
                 for k, v in transaction.metadata.items()]),
-            postings=''.join([posting_template.format(
-                p=p,
-                account=p.account + ' ' * (
-                    80 - (len(p.account) + len(p.amount.symbol) +
-                          len(str(p.amount.amount)) + 1 + 2)
-                )) for p in transaction.postings
-            ])
+            postings=out_postings
         ).encode('utf8')
 
         with open(self.ledger_file, 'ab') as f:
@@ -194,7 +212,7 @@ class Ledger(Storage):
         return transaction.id
 
     def bal(self):
-        output = self.send_command('xml')
+        output = self.run_command('xml')
 
         if output is None:
             raise RuntimeError('bal call returned no output')
@@ -248,7 +266,7 @@ class Ledger(Storage):
                 return transaction
 
     def reg(self):
-        output = self.send_command('xml')
+        output = self.run_command('xml')
 
         if output is None:
             raise RuntimeError('reg call returned no output')

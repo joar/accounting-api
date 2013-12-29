@@ -442,7 +442,11 @@ class Ledger(Storage):
 
         self.delete_transaction(transaction.id)
 
-        self.add_transaction(transaction)
+        try:
+            self.add_transaction(transaction)
+        except AccountingException as exc:
+            self.add_transaction(old_transaction)
+            raise exc
 
         _log.info('Updated transaction %s', transaction.id)
         _log.debug('Updated transaction from: %s to: %s', old_transaction,

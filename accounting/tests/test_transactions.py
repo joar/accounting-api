@@ -336,5 +336,20 @@ class TransactionTestCase(unittest.TestCase):
                     'Something about this transaction\'s postings is' \
                     ' unexpected'
 
+    def test_invalid_update_transaction_does_not_remove_existing(self):
+        transaction = self._add_simple_transaction()
+        old_transaction = copy.deepcopy(transaction)
+
+        transaction.postings[0].amount.amount = '9001.01'
+
+        response = self._post_json('/transaction/' + transaction.id,
+                                   {'transaction': transaction}, 400)
+
+        self.assertEqual(response['error']['type'], 'LedgerNotBalanced')
+
+        response = self._get_json('/transaction/' + transaction.id)
+
+        self.assertEqual(response['transaction'], old_transaction)
+
 if __name__ == '__main__':
     unittest.main()
